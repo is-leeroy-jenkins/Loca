@@ -96,7 +96,7 @@ The current application mode contract is:
 | **Prompt Engineering** | Manage reusable prompt templates and cascade them into generation modes.                  | Search, category inference, sort, pagination, go-to-ID, prompt table, apply to Text Generation, apply to Document Q&A, clone, starter prompt generator, edit/create/delete.                                                                                               |
 | **Data Management**    | Manage local SQLite data and AI asset metadata.                                           | Excel import, table browse, CRUD, profile/explore, filter, aggregate, visualize, schema admin, index creation, AI asset governance, and read-only SQL console.                                                                                                            |
 
-## 🤖 Supported Models
+## 🤖 Custom LLMs
 
 Model availability is controlled by local environment-variable paths in `config.py`. A model appears
 in
