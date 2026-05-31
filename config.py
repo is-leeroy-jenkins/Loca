@@ -1,6 +1,6 @@
 '''
   ******************************************************************************************
-      Assembly:                Bro
+      Assembly:                Loca
       Filename:                config.py
       Author:                  Terry D. Eppler
       Created:                 05-31-2022
@@ -45,23 +45,318 @@ import os
 import re
 import multiprocessing
 
-# ---------- DEFINITIONS -------------------
+# ---------- LLM PATHS -------------------
 
-BRO_LLM_PATH = os.getenv( 'BRO_LLM_PATH' )
-BLUE_DIVIDER = "<div style='height:2px;align:left;background:#0078FC;margin:20px 0 20px 0;'></div>"
-APP_TITLE = 'Bro'
-APP_SUBTITLE = 'Local AI based on Gemma 3'
+BRO_LLM_PATH = os.getenv( 'BRO_LLM_PATH', '' )
+GIPITY_LLM_PATH = os.getenv( 'GIPITY_LLM_PATH', '' )
+BUDDY_LLM_PATH = os.getenv( 'BUDDY_LLM_PATH', '' )
+BOO_LLM_PATH = os.getenv( 'BOO_LLM_PATH', '' )
+JIMI_LLM_PATH = os.getenv( 'JIMI_LLM_PATH', '' )
+LEEROY_LLM_PATH = os.getenv( 'LEEROY_LLM_PATH', '' )
+NISTY_LLM_PATH = os.getenv( 'NISTY_LLM_PATH', '' )
+
+# ---------- CONSTANTS -------------------
+
+BLUE_DIVIDER = "<div style='height:2px;align:left;background:#0078FC;margin:30px 0 30px 0;'></div>"
+APP_TITLE = 'Loca-Llama'
+APP_SUBTITLE = 'Local AI'
 BASE_DIR = os.path.dirname( os.path.abspath( __file__ ) )
-DB_PATH = 'stores/sqlite/bro.db'
-MODEL_PATH = r'C:\Users\terry\source\llm\bro\bro-3-4b-it-qat-Q4_K_M.gguf'
+DB_PATH = 'stores/sqlite/loca.db'
 DEFAULT_CTX = 4096
 CORES = multiprocessing.cpu_count( )
 FAVICON = r'resources/images/favicon.ico'
-LOGO = r'resources/bro_logo.png'
+BRO_LOGO = r'resources/images/bro_logo.png'
+LEEROY_LOGO = r'resources/images/leeroy_logo.png'
+BOO_LOGO = r'resources/images/boo_logo.png'
+JIMI_LOGO = r'resources/images/jimi_logo.png'
+BUDDY_LOGO = r'resources/images/buddy_logo.png'
+GIPITY_LOGO = r'resources/images/gipity_logo.png'
+NISTY_LOGO = r'resources/images/nisty_logo.png'
+LOGO = r'resources/images/loca-llama_logo.png'
 XML_BLOCK_PATTERN = re.compile( r"<(?P<tag>[a-zA-Z0-9_:-]+)>(?P<body>.*?)</\1>", re.DOTALL )
 MARKDOWN_HEADING_PATTERN = re.compile( r"^##\s+(?P<title>.+?)\s*$" )
-MODES = [ 'Text Generation', 'Document Q&A', 'Semantic Search',
-          'Prompt Engineering', 'Data Management' ]
+
+# ---------- MODE CONTRACT -------------------
+
+TEXT_MODE = 'Text Generation'
+IMAGE_MODE = 'Images API'
+AUDIO_MODE = 'Audio API'
+DOCQNA_MODE = 'Document Q&A'
+SEMANTIC_MODE = 'Semantic Search'
+PROMPT_MODE = 'Prompt Engineering'
+DATA_MODE = 'Data Management'
+
+MODES = [
+		TEXT_MODE,
+		DOCQNA_MODE,
+		SEMANTIC_MODE,
+		PROMPT_MODE,
+		DATA_MODE
+]
+
+DEFAULT_MODEL = 'Bro'
+DEFAULT_MODE = TEXT_MODE
+
+# ---------- MODEL REGISTRY -------------------
+
+MODEL_REGISTRY = \
+	{
+			'Bro':
+				{
+						'path': BRO_LLM_PATH,
+						'logo': BRO_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Gemma',
+						'model_name': 'Bro',
+						'size': '4B',
+						'base_model': 'gemma-3-4b-it',
+						'chat_template': 'chatml',
+						'description': 'A multi-modal model with a 128K context window and '
+						               'multilingual support in over 140 languages '
+				},
+			'Gipity':
+				{
+						'path': GIPITY_LLM_PATH,
+						'logo': GIPITY_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Chat GPT',
+						'model_name': 'Gipity',
+						'size': '21B',
+						'base_model': 'gpt-oss-20b',
+						'chat_template': 'chatml',
+						'description': 'A general-purpose model designed for powerful reasoning, '
+						               'agentic tasks, and versatile developer use cases'
+				},
+			'Buddy':
+				{
+						'path': BUDDY_LLM_PATH,
+						'logo': BUDDY_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Gemma 3',
+						'model_name': 'Buddy',
+						'size': '0.3B',
+						'base_model': 'gemma-3-270m-it',
+						'chat_template': 'chatml',
+						'description': 'A multi-modal model with a 32K context window and multilingual '
+						               'support in over 140 languages  '
+				},
+			'Boo':
+				{
+						'path': BOO_LLM_PATH,
+						'logo': BOO_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Phi',
+						'model_name': 'Boo',
+						'size': '3.8B',
+						'base_model': 'Phi-4-mini-instruct',
+						'chat_template': 'chatml',
+						'description': 'A lightweight model built on synthetic data and filtered '
+						               'publicly available websites - with a focus on high-quality, '
+						               'reasoning-dense data that supports a 128K context length. '
+				},
+			'Jimi':
+				{
+						'path': JIMI_LLM_PATH,
+						'logo': JIMI_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									IMAGE_MODE,
+									AUDIO_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Gemma',
+						'model_name': 'Jimi',
+						'size': '4B',
+						'base_model': 'gemma-4-E4B-it',
+						'chat_template': 'chatml',
+						'description': 'A general-purpose, multi-modal, instruction-tuned '
+						               'model with a context window of up to 128K tokens '
+						               'and multilingual support in over 140 languages.'
+				},
+			'Leeroy':
+				{
+						'path': LEEROY_LLM_PATH,
+						'logo': LEEROY_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Llama',
+						'model_name': 'Leeroy',
+						'size': '1B',
+						'base_model': 'Llama-3.2-1B-Instruct',
+						'chat_template': 'chatml',
+						'description': 'An instruction-tuned, text-only model optimized '
+						               'for multilingual dialogue use cases, agentic retrieval '
+						               'and summarization tasks.'
+				},
+			'Nisty':
+				{
+						'path': NISTY_LLM_PATH,
+						'logo': NISTY_LOGO,
+						'modes':
+							[
+									TEXT_MODE,
+									IMAGE_MODE,
+									AUDIO_MODE,
+									DOCQNA_MODE,
+									SEMANTIC_MODE,
+									PROMPT_MODE,
+									DATA_MODE
+							],
+						'family': 'Gemma',
+						'model_name': 'Nisty',
+						'size': '4B',
+						'base_model': 'gemma-4-E4B-it',
+						'chat_template': 'chatml',
+						'description': 'A locally-hosted, multi-modal, instruction-tuned model '
+						               'for governance and document tasks with a 128K context window '
+						               'and multilingual support in over 140 languages.'
+				}
+	}
+
+# ---------- BACKWARD-COMPATIBILITY MAPS -------------------
+
+MODEL_MAP = { name: spec[ 'path' ] for name, spec in MODEL_REGISTRY.items( ) }
+MODEL_PATH = MODEL_MAP.get( DEFAULT_MODEL, '' )
+
+# ---------- MODEL HELPERS -------------------
+
+def get_model_names( ) -> list[ str ]:
+	"""
+		Purpose:
+		--------
+		Return the configured local model names in registry order.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		list[str]
+			Available local model names.
+	"""
+	return list( MODEL_REGISTRY.keys( ) )
+
+def get_model_spec( model_name: str ) -> dict:
+	"""
+		Purpose:
+		--------
+		Return the registry specification for a selected local model.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		dict
+			Model specification containing path, modes, family, size, template, and description.
+	"""
+	if model_name in MODEL_REGISTRY.keys( ):
+		return MODEL_REGISTRY[ model_name ]
+	
+	return MODEL_REGISTRY[ DEFAULT_MODEL ]
+
+def get_model_path( model_name: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the GGUF path for a selected local model.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		str
+			Resolved GGUF path.
+	"""
+	spec = get_model_spec( model_name )
+	return str( spec.get( 'path', '' ) or '' )
+
+def get_model_logo( model_name: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the logo path for a selected local model.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		str
+			Model logo path.
+	"""
+	spec = get_model_spec( model_name )
+	return str( spec.get( 'logo', '' ) or '' )
+
+def get_model_modes( model_name: str ) -> list[ str ]:
+	"""
+		Purpose:
+		--------
+		Return the supported UI modes for a selected local model.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		list[str]
+			Supported UI mode names.
+	"""
+	spec = get_model_spec( model_name )
+	modes = spec.get( 'modes', MODES )
+	
+	if isinstance( modes, list ) and len( modes ) > 0:
+		return modes
+	
+	return MODES.copy( )
 
 # ---------- DEFINITIONS -------------------
 
@@ -125,10 +420,10 @@ PROMPT_ENGINEERING = r'''Prompt engineering is the process of writing effective 
 TEXT_GENERATION = r'''Use a large language model to produce coherent, context-aware natural language
 		output in response to user prompts, system instructions, or retrieved document context.
 		When a user submits a request—whether it is a general inquiry, a structured analytical task,
-		or a document-grounded question—Bro constructs a prompt that may include system directives,
+		or a document-grounded question— the LLM constructs a prompt that may include system directives,
 		conversation history, and optionally retrieved content from its vector store. The underlying
 		model then generates text according to configurable parameters such as temperature,
-		maximum tokens, and response format. This capability enables Bro to function as
+		maximum tokens, and response format. This capability enables the LLM to function as
 		a conversational assistant, analytical explainer, summarizer, drafting tool, and reasoning engine,
 		producing structured or narrative outputs tailored to the user’s workflow. '''
 
@@ -139,7 +434,7 @@ DATA_MANAGEMENT = r'''Structured handling, organization, processing of
 		and Data Analysis. Beyond ingestion, it includes version awareness, indexing, schema inspection
 		(where applicable), and the ability to manage or remove stored assets safely. Document
 		Management provides the foundational infrastructure that transforms raw files into structured,
-		searchable, and model-ready assets, ensuring that Bro’s intelligence features operate
+		searchable, and model-ready assets, ensuring that LLM’s intelligence features operate
 		on reliable, well-governed data rather than unmanaged documents.  '''
 
 RETRIEVAL_AUGMENTATION = '''Retrieval-Augmented Generation (RAG) improves LLM accuracy and relevance
@@ -147,55 +442,55 @@ RETRIEVAL_AUGMENTATION = '''Retrieval-Augmented Generation (RAG) improves LLM ac
 		it into the prompt before generating a response. It reduces hallucinations and eliminates the
 		need to retrain models for new information.'''
 
-SEMANTIC_SEARCH = '''LLM semantic search uses Large Language Models and embedding vectors to retrieve
+SEMANTIC_SEARCH = '''Semantic search uses Large Language Models and embedding vectors to retrieve
 		information based on conceptual meaning and user intent, rather than strict keyword matching.
 		By converting documents and queries into numerical vector embeddings stored in a database,
 		systems can find contextually relevant information, enabling more accurate, conversational,
 		and nuanced search experiences, often used in RAG (Retrieval-Augmented Generation) systems.'''
 
-USE_CHAT_HISTORY = '''When enabled, Bro includes prior user and assistant turns when constructing
+USE_CHAT_HISTORY = '''When enabled, the LLM includes prior user and assistant turns when constructing
 		the current prompt. This helps preserve conversational continuity, allows follow-up
 		questions to reference earlier context, and makes multi-turn interactions feel coherent.
 		Disable it when you want each request to be handled as a fresh, isolated prompt.'''
 
-USE_DOCUMENT_CONTEXT = '''When enabled, Bro appends shared document context stored in session state
+USE_DOCUMENT_CONTEXT = '''When enabled, the LLM appends shared document context stored in session state
 		to the prompt. This is useful when you want generation to be influenced by previously
 		selected excerpts, semantic-search results, or other document-derived context beyond
 		the live user message. Disable it for purely standalone generation.'''
 
-ANSWER_ONLY = '''When enabled, Bro instructs the model to return the answer directly with minimal
+ANSWER_ONLY = '''When enabled, it instructs the model to return the answer directly with minimal
 		prefatory narration. This is useful for concise responses, direct question answering,
 		and structured workflows where extra explanation is undesirable. Disable it when you
 		want fuller reasoning, framing, or narrative context in the response.'''
 
-USE_SELF_CHECK = '''When enabled, Bro instructs the model to internally verify its conclusion before
+USE_SELF_CHECK = '''When enabled, it instructs the model to internally verify its conclusion before
 		responding. This can improve care and consistency for reasoning-heavy tasks, though it
 		may slightly increase response latency or verbosity depending on the prompt.'''
 
-DETERMINISTIC_REASONING = '''When enabled, Bro biases the model toward stable, conservative reasoning
+DETERMINISTIC_REASONING = '''When enabled, it biases the model toward stable, conservative reasoning
 		and reduced variation across similar prompts. This is useful when you want less creative
 		drift and more repeatable analytical behavior. It complements, but does not replace,
 		temperature and sampling controls.'''
 
-CODING_INCLUDE_COMMENTS = '''When enabled, Bro asks the model to include documentation comments
+CODING_INCLUDE_COMMENTS = '''When enabled, it asks the model to include documentation comments
 		and useful inline comments in generated code where appropriate. This is helpful for
 		readability, maintainability, and teaching scenarios. Disable it when you want cleaner,
 		minimal code with less commentary.'''
 
-CODING_EDITOR_FORMAT = '''When enabled, Bro instructs the model to format code as editor-ready
+CODING_EDITOR_FORMAT = '''When enabled, it instructs the model to format code as editor-ready
 		source rather than pseudo-code or conversational fragments. This is useful when the
 		output is intended to be copied directly into an IDE, notebook, or source file.'''
 
-CODING_FENCED_OUTPUT = '''When enabled, Bro wraps generated code in fenced Markdown code blocks.
+CODING_FENCED_OUTPUT = '''When enabled, it wraps generated code in fenced Markdown code blocks.
 		This improves readability in the UI and preserves formatting for copy/paste. Disable it
 		when you prefer raw source text without Markdown fences.'''
 
-USE_GROUNDING = '''When enabled, Bro indicates that responses should remain anchored to available
+USE_GROUNDING = '''When enabled, it indicates that responses should remain anchored to available
 		context rather than drifting into unsupported generalization. In text generation this is
 		a soft behavioral instruction; in document-oriented workflows, grounding is reinforced
 		through retrieved evidence.'''
 
-SHOW_RETRIEVED_CHUNKS = '''When enabled, Bro displays the document chunks retrieved for the current
+SHOW_RETRIEVED_CHUNKS = '''When enabled, it displays the document chunks retrieved for the current
 		Document Q&A request. This makes retrieval behavior transparent, helps with debugging,
 		and lets users inspect exactly what evidence informed the answer. Disable it for a
 		cleaner chat experience.'''
@@ -204,34 +499,34 @@ REQUIRE_GROUNDING = '''When enabled, Document Q&A instructs the model to ground 
 		retrieved document excerpts. This reduces unsupported claims and keeps responses tied to
 		the active evidence base rather than general background knowledge.'''
 
-ANSWER_FROM_EXCERPTS_ONLY = '''When enabled, Bro tells the model to answer only from the retrieved
+ANSWER_FROM_EXCERPTS_ONLY = '''When enabled, it tells the model to answer only from the retrieved
 		excerpts and to say clearly when the evidence is insufficient. This is useful when you
 		want strict retrieval-based answering and minimal hallucination risk. Disable it when
 		you are willing to allow broader model inference beyond the excerpts.'''
 
-USE_SQLITE_VEC = '''When enabled, Bro attempts to use the sqlite-vec virtual table for vector
+USE_SQLITE_VEC = '''When enabled, it attempts to use the sqlite-vec virtual table for vector
 		retrieval in Document Q&A. This can provide fast nearest-neighbor lookup over document
 		embeddings. Disable it if sqlite-vec is unavailable or if you want to force fallback
 		retrieval behavior.'''
 
-FALLBACK_COSINE_SEARCH = '''When enabled, Bro falls back to in-memory cosine-similarity search if
+FALLBACK_COSINE_SEARCH = '''When enabled, it falls back to in-memory cosine-similarity search if
 		sqlite-vec retrieval is unavailable or fails. This improves robustness and keeps Document
 		Q&A usable even when vector-table support is not available, though it may be slower on
 		larger document sets.'''
 
-ENABLE_OCR = '''When enabled, Bro is permitted to use OCR-oriented parsing behavior for documents
+ENABLE_OCR = '''When enabled, it is permitted to use OCR-oriented parsing behavior for documents
 		when native text extraction is inadequate. This is most useful for scanned PDFs or image-
 		like documents where embedded text is missing or poor.'''
 
-PREFER_NATIVE_PDF_TEXT = '''When enabled, Bro prioritizes native text extraction from PDFs before
+PREFER_NATIVE_PDF_TEXT = '''When enabled, it prioritizes native text extraction from PDFs before
 		considering other parsing approaches. This is generally faster and cleaner for digital PDFs
 		with embedded text. Disable it when native extraction is unreliable for the document set.'''
 
-INCLUDE_PAGE_MARKERS = '''When enabled, Bro inserts page markers such as [Page N] into extracted
+INCLUDE_PAGE_MARKERS = '''When enabled, it inserts page markers such as [Page N] into extracted
 		document text. This helps preserve page locality, improves traceability during retrieval,
 		and can make downstream answers easier to verify against the source document.'''
 
-SHOW_DOC_PARSE_DIAGNOSTICS = '''When enabled, Bro displays document parsing and indexing diagnostics
+SHOW_DOC_PARSE_DIAGNOSTICS = '''When enabled, it displays document parsing and indexing diagnostics
 		such as chunk size, overlap, vector readiness, and chunk counts. This is useful for
 		debugging ingestion and retrieval behavior during development or evaluation.'''
 
@@ -239,7 +534,7 @@ SEMANTIC_CLEAR_EXISTING = '''When enabled, building a semantic index will clear 
 		embeddings table before inserting new chunks. Use this when you want a fresh semantic
 		search corpus rather than a cumulative one.'''
 
-SEMANTIC_APPEND_EXISTING = '''When enabled, Bro appends new semantic chunks to the existing
+SEMANTIC_APPEND_EXISTING = '''When enabled, it appends new semantic chunks to the existing
 		embeddings table instead of replacing prior content. This is useful when you want to
 		accumulate multiple document sets into one searchable semantic index.'''
 
@@ -251,3 +546,23 @@ SEMANTIC_GROUP_BY_DOCUMENT = '''When enabled, Semantic Search is intended to gro
 		by source document rather than treating all chunks as one flat result set. In the current
 		implementation this is primarily a UI intent flag and will be most useful once document-
 		level grouping metadata is fully surfaced in the embeddings workflow.'''
+
+AUDIO_API = r'''The Audio API functionality enables the ingestion, transformation, and generation
+		of spoken language as part of the broader AI workflow. It allows users to upload audio files
+		for transcription, converting speech into structured text that can then be analyzed,
+		summarized, embedded, or used in Document Q&A and conversational contexts. It can also
+		support translation of spoken content into other languages and text-to-speech generation, p
+		roducing natural-sounding audio from model-generated text. By integrating speech recognition
+		and synthesis alongside text and document processing, the Audio API expands Boo into a
+		multimodal assistant capable of handling voice-driven inputs and delivering spoken outputs
+		within analytical or conversational workflows.  '''
+
+IMAGES_API = r''' Enables the generation and analysis of visual content as part of the application’s
+		broader AI workflow. On the generation side, users can provide descriptive prompts to
+		create images that support presentations, reports, branding, or conceptual exploration.
+		On the analysis side, uploaded images can be processed to extract descriptive insights,
+		captions, or structured information that can then be incorporated into downstream tasks
+		such as summarization or decision support. By integrating image generation and interpretation
+		alongside text, documents, and structured data, the Images API expands beyond purely textual interaction,
+		allowing it to operate in a multimodal environment where visual and
+		linguistic information can be processed cohesively '''

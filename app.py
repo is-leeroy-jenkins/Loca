@@ -1,6 +1,6 @@
 '''
 	******************************************************************************************
-	    Assembly:                Bro
+	    Assembly:                Loca LLama
 	    Filename:                app.py
 	    Author:                  Terry D. Eppler
 	    Created:                 05-31-2024
@@ -10,8 +10,7 @@
 	******************************************************************************************
 	<copyright file="app.py" company="Terry D. Eppler">
 	
-	           Bro is a data analysis tool integrating various Generative GPT, Text-Processing, and
-	           Machine-Learning algorithms for federal analysts.
+	           Loca is python application for running local LLMs.
 	           Copyright ©  2023 Terry Eppler
 	
 	   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,30 +48,46 @@ import hashlib
 import re
 import sqlite3
 import time
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from llama_cpp import Llama
+
 import config as cfg
+
+try:
+	from docx import Document
+except ImportError:
+	Document = None
+
+try:
+	from llama_cpp import Llama
+except ImportError:
+	Llama = None
 
 try:
 	import fitz
 except ImportError:
 	fitz = None
-	
-# ==============================================================================
-# Model Path Resolution
-# ==============================================================================
-MODEL_PATH_OBJ = Path( cfg.MODEL_PATH )
 
-def local_model_available( ) -> bool:
+# ==============================================================================
+# STREAMLIT BOOTSTRAP
+# ==============================================================================
+
+st.set_page_config( page_title=cfg.APP_TITLE, layout='wide',
+	page_icon=cfg.FAVICON )
+
+st.caption( cfg.APP_SUBTITLE )
+
+def is_docx_available( ) -> bool:
 	"""
 		Purpose:
 		--------
-		Determine whether the configured local GGUF model exists.
+		Determine whether python-docx is available for DOCX extraction.
 
 		Parameters:
 		-----------
@@ -81,10 +96,133 @@ def local_model_available( ) -> bool:
 		Returns:
 		--------
 		bool
+			True when python-docx is available; otherwise False.
+	"""
+	return Document is not None
+
+def is_llama_cpp_available( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether llama-cpp-python is available for local GGUF inference.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when llama-cpp-python is available; otherwise False.
+	"""
+	return Llama is not None
+
+def is_pymupdf_available( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether PyMuPDF is available for native PDF text extraction.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when PyMuPDF is available; otherwise False.
+	"""
+	return fitz is not None
+
+def get_selected_model_name( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the currently selected local model name from Streamlit session state.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Selected model name.
+	"""
+	model_name = str(
+		st.session_state.get( 'selected_model_name', get_default_model_name( ) ) or
+		get_default_model_name( ) )
+	
+	return model_name
+
+def get_selected_model_path( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the currently selected local GGUF model path from Streamlit session state.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Resolved local GGUF path for the selected model.
+	"""
+	model_name = get_selected_model_name( )
+	model_path = str(
+		st.session_state.get( 'selected_model_path', get_model_path_for_state( model_name ) ) or
+		get_model_path_for_state( model_name ) )
+	
+	return model_path
+
+def get_selected_model_spec( ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Return the selected model specification from Streamlit session state.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Selected model metadata.
+	"""
+	model_name = get_selected_model_name( )
+	model_spec = st.session_state.get( 'selected_model_spec', None )
+	
+	if isinstance( model_spec, dict ) and len( model_spec ) > 0:
+		return model_spec
+	
+	return get_model_spec_for_state( model_name )
+
+def local_model_available( model_path: str | None = None ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected or supplied local GGUF model file exists.
+
+		Parameters:
+		-----------
+		model_path : str | None
+			Optional GGUF model path. When omitted, the selected model path is used.
+
+		Returns:
+		--------
+		bool
 			True when the configured model file exists; otherwise False.
 	"""
 	try:
-		return MODEL_PATH_OBJ.exists( )
+		path_value = str( model_path or get_selected_model_path( ) or '' ).strip( )
+		
+		if not path_value:
+			return False
+		
+		return Path( path_value ).exists( )
 	except Exception:
 		return False
 	
@@ -366,7 +504,1824 @@ if 'dm_register_uploaded_docs' not in st.session_state:
 
 if 'dm_register_uploaded_images' not in st.session_state:
 	st.session_state[ 'dm_register_uploaded_images' ] = False
+
+# ==============================================================================
+# MODEL / MODE SESSION STATE CONTRACT
+# ==============================================================================
+
+def get_default_model_name( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the configured default local model name from config.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Default model name.
+	"""
+	default_model = str( getattr( cfg, 'DEFAULT_MODEL', '' ) or '' ).strip( )
 	
+	if default_model:
+		return default_model
+	
+	if hasattr( cfg, 'get_model_names' ):
+		model_names = cfg.get_model_names( )
+	else:
+		model_names = list( getattr( cfg, 'MODEL_MAP', { } ).keys( ) )
+	
+	return str( model_names[ 0 ] ) if model_names else ''
+
+def get_model_names_for_state( ) -> List[ str ]:
+	"""
+		Purpose:
+		--------
+		Return configured model names from the config registry while preserving fallback
+		compatibility with cfg.MODEL_MAP.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		List[str]
+			Configured model names.
+	"""
+	if hasattr( cfg, 'get_model_names' ):
+		model_names = cfg.get_model_names( )
+	else:
+		model_names = list( getattr( cfg, 'MODEL_MAP', { } ).keys( ) )
+	
+	return [ str( name ) for name in model_names ]
+
+def get_default_mode_name( model_name: str = '' ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the default UI mode for the selected model.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		str
+			Default UI mode name.
+	"""
+	model_value = str( model_name or get_default_model_name( ) ).strip( )
+	
+	if hasattr( cfg, 'get_model_modes' ):
+		modes = cfg.get_model_modes( model_value )
+	else:
+		modes = getattr( cfg, 'MODES', [ ] )
+	
+	if isinstance( modes, list ) and len( modes ) > 0:
+		return str( modes[ 0 ] )
+	
+	return str( getattr( cfg, 'DEFAULT_MODE', 'Text Generation' ) or 'Text Generation' )
+
+def get_model_modes_for_state( model_name: str ) -> List[ str ]:
+	"""
+		Purpose:
+		--------
+		Return the supported modes for the selected model using the config model registry
+		when available, while preserving fallback compatibility with cfg.MODES.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		List[str]
+			Supported mode names.
+	"""
+	model_value = str( model_name or get_default_model_name( ) ).strip( )
+	
+	if hasattr( cfg, 'get_model_modes' ):
+		modes = cfg.get_model_modes( model_value )
+	else:
+		modes = getattr( cfg, 'MODES', [ ] )
+	
+	if isinstance( modes, list ) and len( modes ) > 0:
+		return [ str( mode_name ) for mode_name in modes ]
+	
+	return [ 'Text Generation' ]
+
+def get_model_path_for_state( model_name: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the selected model path using the config model registry when available,
+		while preserving fallback compatibility with cfg.MODEL_MAP and cfg.MODEL_PATH.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		str
+			Resolved GGUF model path.
+	"""
+	model_value = str( model_name or get_default_model_name( ) ).strip( )
+	
+	if hasattr( cfg, 'get_model_path' ):
+		return str( cfg.get_model_path( model_value ) or '' )
+	
+	if hasattr( cfg, 'MODEL_MAP' ) and model_value in cfg.MODEL_MAP:
+		return str( cfg.MODEL_MAP.get( model_value, '' ) or '' )
+	
+	return str( getattr( cfg, 'MODEL_PATH', '' ) or '' )
+
+def get_model_spec_for_state( model_name: str ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Return the selected model registry specification when available.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Model specification dictionary.
+	"""
+	model_value = str( model_name or get_default_model_name( ) ).strip( )
+	
+	if hasattr( cfg, 'get_model_spec' ):
+		spec = cfg.get_model_spec( model_value )
+		if isinstance( spec, dict ):
+			return spec
+	
+	return {
+			'path': get_model_path_for_state( model_value ),
+			'modes': get_model_modes_for_state( model_value ),
+			'family': '',
+			'size': '',
+			'chat_template': 'chatml',
+			'description': ''
+	}
+
+def initialize_model_mode_state( ) -> None:
+	"""
+		Purpose:
+		--------
+		Initialize widget-owned and derived model/mode session-state keys before the
+		sidebar widgets are created.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	model_names = get_model_names_for_state( )
+	default_model = get_default_model_name( )
+	
+	if 'selected_model_name' not in st.session_state:
+		st.session_state[ 'selected_model_name' ] = default_model
+	
+	model_name = str(
+		st.session_state.get( 'selected_model_name', default_model ) or default_model )
+	
+	if model_names and model_name not in model_names:
+		model_name = default_model
+		st.session_state[ 'selected_model_name' ] = model_name
+	
+	model_modes = get_model_modes_for_state( model_name )
+	
+	if 'selected_mode' not in st.session_state:
+		st.session_state[ 'selected_mode' ] = ( model_modes[ 0 ]
+		                                        if model_modes
+		                                        else get_default_mode_name( model_name ) )
+	
+	selected_mode = str( st.session_state.get( 'selected_mode', get_default_mode_name( model_name ) ) or
+		get_default_mode_name( model_name ) )
+	
+	if selected_mode not in model_modes:
+		selected_mode = model_modes[ 0 ] if model_modes else get_default_mode_name( model_name )
+		st.session_state[ 'selected_mode' ] = selected_mode
+	
+	st.session_state[ 'selected_model_path' ] = get_model_path_for_state( model_name )
+	st.session_state[ 'selected_model_modes' ] = model_modes
+	st.session_state[ 'selected_model_spec' ] = get_model_spec_for_state( model_name )
+	st.session_state[ 'active_model_name' ] = model_name
+	st.session_state[ 'mode' ] = selected_mode
+	
+	if 'model_switch_counter' not in st.session_state:
+		st.session_state[ 'model_switch_counter' ] = 0
+
+def synchronize_model_derived_state( ) -> None:
+	"""
+		Purpose:
+		--------
+		Synchronize derived model state without modifying widget-owned keys after their
+		widgets have been instantiated.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	model_name = str( st.session_state.get( 'selected_model_name', get_default_model_name( ) ) or
+		get_default_model_name( ) )
+	
+	model_modes = get_model_modes_for_state( model_name )
+	
+	st.session_state[ 'selected_model_path' ] = get_model_path_for_state( model_name )
+	st.session_state[ 'selected_model_modes' ] = model_modes
+	st.session_state[ 'selected_model_spec' ] = get_model_spec_for_state( model_name )
+	st.session_state[ 'active_model_name' ] = model_name
+	
+	selected_mode = str(
+		st.session_state.get( 'selected_mode', get_default_mode_name( model_name ) ) or
+		get_default_mode_name( model_name )
+	)
+	
+	if selected_mode in model_modes:
+		st.session_state[ 'mode' ] = selected_mode
+	else:
+		st.session_state[ 'pending_selected_mode' ] = (
+				model_modes[ 0 ] if model_modes else get_default_mode_name( model_name )
+		)
+
+def on_selected_model_change( ) -> None:
+	"""
+		Purpose:
+		--------
+		Streamlit callback used by the LLM selector to resynchronize derived model values
+		after the selected model changes without directly modifying selected_mode.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	previous_model = str( st.session_state.get( 'active_model_name', '' ) or '' )
+	model_name = str(
+		st.session_state.get( 'selected_model_name', get_default_model_name( ) ) or
+		get_default_model_name( )
+	)
+	
+	model_modes = get_model_modes_for_state( model_name )
+	
+	st.session_state[ 'selected_model_path' ] = get_model_path_for_state( model_name )
+	st.session_state[ 'selected_model_modes' ] = model_modes
+	st.session_state[ 'selected_model_spec' ] = get_model_spec_for_state( model_name )
+	st.session_state[ 'active_model_name' ] = model_name
+	
+	if previous_model and previous_model != model_name:
+		st.session_state[ 'model_switch_counter' ] = ( int( st.session_state.get(
+			'model_switch_counter', 0 ) or 0 ) + 1 )
+	
+	current_mode = str( st.session_state.get( 'selected_mode', '' ) or '' )
+	if current_mode not in model_modes:
+		st.session_state[ 'pending_selected_mode' ] = ( model_modes[ 0 ]
+		                                                if model_modes
+	
+		                                                else get_default_mode_name( model_name ) )
+	try:
+		refresh_capability_session_state( )
+		apply_model_safe_retrieval_defaults( model_name )
+	except Exception:
+		pass
+		
+def on_selected_mode_change( ) -> None:
+	"""
+		Purpose:
+		--------
+		Streamlit callback used by the AI Mode selector to keep the legacy mode key
+		aligned with selected_mode.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	selected_mode = str( st.session_state.get( 'selected_mode', '' ) or '' )
+	st.session_state[ 'mode' ] = selected_mode
+
+def get_mode_constant( constant_name: str, fallback: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return a mode constant from config with a stable fallback. This allows app.py to
+		accept expanded config.py mode definitions without crashing while config updates
+		are being staged.
+
+		Parameters:
+		-----------
+		constant_name : str
+			Name of the config.py constant.
+
+		fallback : str
+			Fallback mode name.
+
+		Returns:
+		--------
+		str
+			Resolved mode name.
+	"""
+	try:
+		value = cfg.__dict__.get( constant_name, fallback )
+		value = str( value or fallback ).strip( )
+		return value if value else fallback
+	except Exception:
+		return fallback
+
+def get_mode_definition_text( mode_name: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return descriptive config.py text for expanded API modes when available.
+
+		Parameters:
+		-----------
+		mode_name : str
+			UI mode name.
+
+		Returns:
+		--------
+		str
+			Mode description text.
+	"""
+	try:
+		image_mode = get_mode_constant( 'IMAGE_MODE', 'Images API' )
+		audio_mode = get_mode_constant( 'AUDIO_MODE', 'Audio API' )
+		
+		if mode_name == image_mode:
+			return str( cfg.__dict__.get( 'IMAGES_API', '' ) or '' ).strip( )
+		
+		if mode_name == audio_mode:
+			return str( cfg.__dict__.get( 'AUDIO_API', '' ) or '' ).strip( )
+		
+		return ''
+	except Exception:
+		return ''
+
+def get_selected_base_model( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the selected model's configured base model name.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Base model name.
+	"""
+	try:
+		spec = get_selected_model_spec( )
+		return str( spec.get( 'base_model', '' ) or '' ).strip( )
+	except Exception:
+		return ''
+
+def get_selected_model_family( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the selected model's configured model family.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Model family name.
+	"""
+	try:
+		spec = get_selected_model_spec( )
+		return str( spec.get( 'family', '' ) or '' ).strip( )
+	except Exception:
+		return ''
+
+def get_selected_chat_template( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the selected model's configured chat template.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Chat template name.
+	"""
+	try:
+		spec = get_selected_model_spec( )
+		return str( spec.get( 'chat_template', '' ) or '' ).strip( )
+	except Exception:
+		return ''
+
+def is_buddy_model( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected model is Buddy or a Buddy base model.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when Buddy is selected; otherwise False.
+	"""
+	model_name = get_selected_model_name( ).lower( )
+	base_model = get_selected_base_model( ).lower( )
+	return model_name == 'buddy' or base_model == 'gemma-3-270m-it'
+
+def is_gipity_model( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected model is Gipity or a GPT-OSS base model.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when Gipity is selected; otherwise False.
+	"""
+	model_name = get_selected_model_name( ).lower( )
+	base_model = get_selected_base_model( ).lower( )
+	return model_name == 'gipity' or base_model == 'gpt-oss-20b'
+
+def is_gemma4_model( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected model uses the Gemma 4 E4B base model.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when a Gemma 4 E4B model is selected; otherwise False.
+	"""
+	model_name = get_selected_model_name( ).lower( )
+	base_model = get_selected_base_model( ).lower( )
+	return model_name in ('jimi', 'nisty') or base_model == 'gemma-4-e4b-it'
+
+def is_jimi_or_nisty_model( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected model is Jimi or Nisty.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when Jimi or Nisty is selected; otherwise False.
+	"""
+	model_name = get_selected_model_name( ).lower( )
+	return model_name in ('jimi', 'nisty')
+
+def model_supports_mode( mode_name: str ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected model registry advertises a specific UI mode.
+
+		Parameters:
+		-----------
+		mode_name : str
+			UI mode name.
+
+		Returns:
+		--------
+		bool
+			True when the mode is listed for the selected model; otherwise False.
+	"""
+	try:
+		model_modes = st.session_state.get(
+			'selected_model_modes',
+			get_model_modes_for_state( get_selected_model_name( ) )
+		)
+		
+		if not isinstance( model_modes, list ):
+			return False
+		
+		return str( mode_name or '' ) in [ str( m ) for m in model_modes ]
+	except Exception:
+		return False
+
+def get_runtime_multimodal_status( ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Return the current runtime's multimodal adapter status. This detects whether app.py
+		has an image/audio-capable local adapter configured separately from the model
+		registry. The function fails closed so newly exposed modes cannot crash.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Runtime multimodal status flags and message.
+	"""
+	status = {
+			'image_runtime_available': False,
+			'audio_runtime_available': False,
+			'function_runtime_available': True,
+			'web_runtime_available': False,
+			'runtime_name': 'llama-cpp-python',
+			'message': 'The current local runtime is treated as text-only until a '
+			           'multimodal adapter is explicitly wired into app.py.'
+	}
+	
+	try:
+		if bool( cfg.__dict__.get( 'IMAGE_RUNTIME_AVAILABLE', False ) ):
+			status[ 'image_runtime_available' ] = True
+		
+		if bool( cfg.__dict__.get( 'AUDIO_RUNTIME_AVAILABLE', False ) ):
+			status[ 'audio_runtime_available' ] = True
+		
+		if bool( cfg.__dict__.get( 'WEB_RUNTIME_AVAILABLE', False ) ):
+			status[ 'web_runtime_available' ] = True
+		
+		runtime_name = str( cfg.__dict__.get( 'MULTIMODAL_RUNTIME_NAME', '' ) or '' ).strip( )
+		if runtime_name:
+			status[ 'runtime_name' ] = runtime_name
+		
+		if status[ 'image_runtime_available' ] or status[ 'audio_runtime_available' ]:
+			status[ 'message' ] = 'A multimodal runtime adapter is configured.'
+		
+		return status
+	except Exception:
+		return status
+
+def get_active_model_capabilities( ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Return selected model capability flags used by expanded Text, Image, Audio,
+		Function Calling, Coding, Thinking, and Web Browsing workflows.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Capability contract for the selected model.
+	"""
+	model_name = get_selected_model_name( )
+	base_model = get_selected_base_model( )
+	family = get_selected_model_family( )
+	template = get_selected_chat_template( )
+	image_mode = get_mode_constant( 'IMAGE_MODE', 'Images API' )
+	audio_mode = get_mode_constant( 'AUDIO_MODE', 'Audio API' )
+	docqna_mode = get_mode_constant( 'DOCQNA_MODE', 'Document Q&A' )
+	semantic_mode = get_mode_constant( 'SEMANTIC_MODE', 'Semantic Search' )
+	prompt_mode = get_mode_constant( 'PROMPT_MODE', 'Prompt Engineering' )
+	data_mode = get_mode_constant( 'DATA_MODE', 'Data Management' )
+	text_mode = get_mode_constant( 'TEXT_MODE', 'Text Generation' )
+	runtime_status = get_runtime_multimodal_status( )
+	
+	capabilities: Dict[ str, Any ] = {
+			'model_name': model_name,
+			'base_model': base_model,
+			'family': family,
+			'chat_template': template,
+			'text_generation': model_supports_mode( text_mode ),
+			'document_qna': model_supports_mode( docqna_mode ),
+			'semantic_search': model_supports_mode( semantic_mode ),
+			'prompt_engineering': model_supports_mode( prompt_mode ),
+			'data_management': model_supports_mode( data_mode ),
+			'image_mode': model_supports_mode( image_mode ) and is_jimi_or_nisty_model( ),
+			'audio_mode': model_supports_mode( audio_mode ) and is_jimi_or_nisty_model( ),
+			'image_runtime_available': bool(
+				runtime_status.get( 'image_runtime_available', False ) ),
+			'audio_runtime_available': bool(
+				runtime_status.get( 'audio_runtime_available', False ) ),
+			'function_calling': is_gemma4_model( ) or is_gipity_model( ),
+			'coding': is_gemma4_model( ),
+			'thinking': is_gemma4_model( ),
+			'web_browsing': is_gipity_model( ),
+			'gipity': is_gipity_model( ),
+			'gemma4': is_gemma4_model( ),
+			'buddy': is_buddy_model( ),
+			'runtime_status': runtime_status
+	}
+	
+	return capabilities
+
+def model_supports_capability( capability: str ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the selected model supports a named expanded capability.
+
+		Parameters:
+		-----------
+		capability : str
+			Capability name.
+
+		Returns:
+		--------
+		bool
+			True when the selected model supports the capability; otherwise False.
+	"""
+	try:
+		capabilities = get_active_model_capabilities( )
+		return bool( capabilities.get( str( capability or '' ), False ) )
+	except Exception:
+		return False
+
+def get_capability_status_message( capability: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return a user-facing status message for unsupported or unavailable capabilities.
+
+		Parameters:
+		-----------
+		capability : str
+			Capability name.
+
+		Returns:
+		--------
+		str
+			Status message.
+	"""
+	capabilities = get_active_model_capabilities( )
+	model_name = str( capabilities.get( 'model_name', get_selected_model_name( ) ) or '' )
+	runtime_status = capabilities.get( 'runtime_status', { } )
+	
+	if capability == 'image_mode':
+		if not capabilities.get( 'image_mode', False ):
+			return f'{model_name} is not configured for Image Mode.'
+		
+		if not capabilities.get( 'image_runtime_available', False ):
+			return str( runtime_status.get( 'message', '' ) or
+			            'Image Mode is configured, but no image-capable runtime is wired yet.' )
+	
+	if capability == 'audio_mode':
+		if not capabilities.get( 'audio_mode', False ):
+			return f'{model_name} is not configured for Audio Mode.'
+		
+		if not capabilities.get( 'audio_runtime_available', False ):
+			return str( runtime_status.get( 'message', '' ) or
+			            'Audio Mode is configured, but no audio-capable runtime is wired yet.' )
+	
+	if not bool( capabilities.get( capability, False ) ):
+		return f'{model_name} does not advertise the "{capability}" capability.'
+	
+	return f'{model_name} supports the "{capability}" capability.'
+
+def get_default_function_schema_text( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return a safe starter JSON schema for function-calling workflows.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Starter JSON function schema text.
+	"""
+	return '''{
+	"name": "summarize_text",
+	"description": "Summarize supplied text into concise bullet points.",
+	"parameters": {
+		"type": "object",
+		"properties": {
+			"text": {
+				"type": "string",
+				"description": "The text to summarize."
+			},
+			"max_bullets": {
+				"type": "integer",
+				"description": "Maximum number of bullets to return."
+			}
+		},
+		"required": [
+			"text"
+		]
+	}
+}'''
+
+def initialize_capability_session_state( ) -> None:
+	"""
+		Purpose:
+		--------
+		Initialize expanded capability session-state keys before Image, Audio, Function
+		Calling, Coding, Thinking, and Web Browsing controls are introduced.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	defaults: Dict[ str, Any ] = {
+			'image_prompt': '',
+			'image_uploaded_name': '',
+			'image_response': '',
+			'image_status': '',
+			'image_context_buffer': '',
+			'image_send_to_text': False,
+			'audio_prompt': '',
+			'audio_uploaded_name': '',
+			'audio_response': '',
+			'audio_status': '',
+			'audio_transcript': '',
+			'audio_context_buffer': '',
+			'audio_send_to_text': False,
+			'function_schema_text': get_default_function_schema_text( ),
+			'function_call_prompt': '',
+			'function_call_response': '',
+			'function_call_result': '',
+			'function_call_status': '',
+			'function_call_enabled': False,
+			'function_call_model_json': '',
+			'coding_mode_enabled': False,
+			'coding_test_request': False,
+			'coding_explain_request': False,
+			'thinking_mode_enabled': False,
+			'thinking_effort': 'Medium',
+			'thinking_summary_enabled': True,
+			'web_browse_url': '',
+			'web_browse_allow_domain': '',
+			'web_browse_prompt': '',
+			'web_browse_result': '',
+			'web_browse_status': '',
+			'web_browse_context_buffer': '',
+			'web_browse_send_to_text': False,
+			'active_model_capabilities': { }
+	}
+	
+	for key, value in defaults.items( ):
+		if key not in st.session_state:
+			st.session_state[ key ] = value
+	
+	st.session_state[ 'active_model_capabilities' ] = get_active_model_capabilities( )
+
+def refresh_capability_session_state( ) -> None:
+	"""
+		Purpose:
+		--------
+		Refresh derived capability state after model or mode changes without clearing
+		user-owned text, uploaded-file names, generated output, or existing chat state.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	try:
+		st.session_state[ 'active_model_capabilities' ] = get_active_model_capabilities( )
+	except Exception:
+		st.session_state[ 'active_model_capabilities' ] = { }
+
+initialize_capability_session_state( )
+
+def get_model_retrieval_profile( model_name: str ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Return model-safe retrieval defaults for Document Q&A and Semantic Search. Smaller
+		models receive narrower retrieval windows so grounded prompts stay concise and
+		less likely to exceed practical local runtime limits.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Retrieval profile values.
+	"""
+	model_value = str( model_name or get_selected_model_name( ) or '' ).strip( ).lower( )
+	base_model = ''
+	
+	try:
+		spec = get_model_spec_for_state( model_name )
+		if isinstance( spec, dict ):
+			base_model = str( spec.get( 'base_model', '' ) or '' ).strip( ).lower( )
+	except Exception:
+		base_model = ''
+	
+	if model_value == 'buddy' or base_model == 'gemma-3-270m-it':
+		return {
+				'profile_name': 'Buddy Compact Retrieval',
+				'retrieval_k': 3,
+				'retrieval_chunk_size': 800,
+				'retrieval_chunk_overlap': 120,
+				'semantic_top_k': 4,
+				'semantic_chunk_size': 800,
+				'semantic_chunk_overlap': 120,
+				'semantic_min_similarity': 0.05,
+				'require_grounding': True,
+				'answer_from_excerpts_only': True,
+				'show_retrieved_chunks': True,
+				'prefer_sqlite_vec': True,
+				'allow_similarity_fallback': True,
+				'semantic_show_diagnostics': True,
+				'semantic_group_by_document': False
+		}
+	
+	return {
+			'profile_name': 'Standard Retrieval',
+			'retrieval_k': 6,
+			'retrieval_chunk_size': 1200,
+			'retrieval_chunk_overlap': 200,
+			'semantic_top_k': 8,
+			'semantic_chunk_size': 1200,
+			'semantic_chunk_overlap': 200,
+			'semantic_min_similarity': 0.0,
+			'require_grounding': True,
+			'answer_from_excerpts_only': True,
+			'show_retrieved_chunks': True,
+			'prefer_sqlite_vec': True,
+			'allow_similarity_fallback': True,
+			'semantic_show_diagnostics': True,
+			'semantic_group_by_document': False
+	}
+
+def has_user_tuned_retrieval_controls( ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether the current retrieval controls have already been changed by the
+		user or by a previously applied model profile. This prevents model-safe defaults
+		from overwriting user-tuned values on every Streamlit rerun.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		bool
+			True when retrieval controls should be preserved; otherwise False.
+	"""
+	return bool( st.session_state.get( 'retrieval_controls_user_tuned', False ) )
+
+def mark_retrieval_controls_user_tuned( ) -> None:
+	"""
+		Purpose:
+		--------
+		Mark retrieval controls as user-tuned. Later controls can call this callback if
+		needed to permanently preserve manual user settings across model changes.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	st.session_state[ 'retrieval_controls_user_tuned' ] = True
+
+def apply_retrieval_profile( profile: Dict[ str, Any ], force: bool = False ) -> None:
+	"""
+		Purpose:
+		--------
+		Apply a retrieval profile to Document Q&A and Semantic Search session-state keys.
+		The profile is applied only when forced or when no user-tuned override exists.
+
+		Parameters:
+		-----------
+		profile : Dict[str, Any]
+			Retrieval profile to apply.
+
+		force : bool
+			When True, apply the profile even if retrieval_controls_user_tuned is True.
+
+		Returns:
+		--------
+		None
+	"""
+	if not isinstance( profile, dict ) or len( profile ) == 0:
+		return
+	
+	if has_user_tuned_retrieval_controls( ) and not force:
+		return
+	
+	assignments = {
+			'retrieval_k': int( profile.get( 'retrieval_k', 6 ) ),
+			'retrieval_chunk_size': int( profile.get( 'retrieval_chunk_size', 1200 ) ),
+			'retrieval_chunk_overlap': int( profile.get( 'retrieval_chunk_overlap', 200 ) ),
+			'semantic_top_k': int( profile.get( 'semantic_top_k', 8 ) ),
+			'semantic_chunk_size': int( profile.get( 'semantic_chunk_size', 1200 ) ),
+			'semantic_chunk_overlap': int( profile.get( 'semantic_chunk_overlap', 200 ) ),
+			'semantic_min_similarity': float( profile.get( 'semantic_min_similarity', 0.0 ) ),
+			'require_grounding': bool( profile.get( 'require_grounding', True ) ),
+			'answer_from_excerpts_only': bool( profile.get( 'answer_from_excerpts_only', True ) ),
+			'show_retrieved_chunks': bool( profile.get( 'show_retrieved_chunks', True ) ),
+			'prefer_sqlite_vec': bool( profile.get( 'prefer_sqlite_vec', True ) ),
+			'allow_similarity_fallback': bool( profile.get( 'allow_similarity_fallback', True ) ),
+			'semantic_show_diagnostics': bool( profile.get( 'semantic_show_diagnostics', True ) ),
+			'semantic_group_by_document': bool( profile.get( 'semantic_group_by_document', False ) )
+	}
+	
+	for key, value in assignments.items( ):
+		st.session_state[ key ] = value
+	
+	st.session_state[ 'active_retrieval_profile' ] = str(
+		profile.get( 'profile_name', 'Standard Retrieval' ) or 'Standard Retrieval' )
+	st.session_state[ 'active_retrieval_profile_model' ] = get_selected_model_name( )
+
+def apply_model_safe_retrieval_defaults( model_name: str = '' ) -> None:
+	"""
+		Purpose:
+		--------
+		Apply model-safe retrieval defaults when the selected model changes. Buddy receives
+		compact retrieval settings suitable for a 270M model; other models receive standard
+		settings unless the user has already tuned retrieval controls.
+
+		Parameters:
+		-----------
+		model_name : str
+			Optional selected model name. When omitted, the current selected model is used.
+
+		Returns:
+		--------
+		None
+	"""
+	selected_model = str( model_name or get_selected_model_name( ) or '' ).strip( )
+	if not selected_model:
+		return
+	
+	last_profile_model = str(
+		st.session_state.get( 'last_retrieval_profile_model', '' ) or '' ).strip( )
+	
+	if last_profile_model == selected_model:
+		return
+	
+	profile = get_model_retrieval_profile( selected_model )
+	force_apply = not has_user_tuned_retrieval_controls( )
+	
+	apply_retrieval_profile( profile=profile, force=force_apply )
+	
+	st.session_state[ 'last_retrieval_profile_model' ] = selected_model
+	st.session_state[ 'retrieval_profile_status' ] = (
+			f'Active retrieval profile: {st.session_state.get( "active_retrieval_profile", "" )}')
+
+def reset_model_safe_retrieval_defaults( ) -> None:
+	"""
+		Purpose:
+		--------
+		Clear manual retrieval override state and reapply the selected model's recommended
+		Document Q&A and Semantic Search retrieval profile.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	st.session_state[ 'retrieval_controls_user_tuned' ] = False
+	st.session_state[ 'last_retrieval_profile_model' ] = ''
+	apply_model_safe_retrieval_defaults( get_selected_model_name( ) )
+
+def initialize_model_safe_retrieval_state( ) -> None:
+	"""
+		Purpose:
+		--------
+		Initialize retrieval-profile tracking keys and apply model-safe defaults once after
+		capability session state is initialized.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		None
+	"""
+	if 'retrieval_controls_user_tuned' not in st.session_state:
+		st.session_state[ 'retrieval_controls_user_tuned' ] = False
+	
+	if 'last_retrieval_profile_model' not in st.session_state:
+		st.session_state[ 'last_retrieval_profile_model' ] = ''
+	
+	if 'active_retrieval_profile' not in st.session_state:
+		st.session_state[ 'active_retrieval_profile' ] = ''
+	
+	if 'active_retrieval_profile_model' not in st.session_state:
+		st.session_state[ 'active_retrieval_profile_model' ] = ''
+	
+	if 'retrieval_profile_status' not in st.session_state:
+		st.session_state[ 'retrieval_profile_status' ] = ''
+	
+	apply_model_safe_retrieval_defaults( get_selected_model_name( ) )
+
+initialize_model_safe_retrieval_state( )
+
+def extract_json_object_from_text( text: str ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Extract the first valid JSON object from model-generated text. This supports
+		function-calling outputs where the model may accidentally wrap the object in
+		markdown fences or explanatory prose.
+
+		Parameters:
+		-----------
+		text : str
+			Model-generated text.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Parsed JSON object.
+	"""
+	import json
+	
+	text_value = str( text or '' ).strip( )
+	if not text_value:
+		raise ValueError( 'No function-call text was provided.' )
+	
+	if text_value.startswith( '```' ):
+		text_value = re.sub( r'^```(?:json)?\s*', '', text_value, flags=re.IGNORECASE )
+		text_value = re.sub( r'\s*```$', '', text_value )
+		text_value = text_value.strip( )
+	
+	try:
+		parsed = json.loads( text_value )
+		if isinstance( parsed, dict ):
+			return parsed
+	except Exception:
+		pass
+	
+	start = text_value.find( '{' )
+	if start < 0:
+		raise ValueError( 'No JSON object start marker was found.' )
+	
+	depth = 0
+	in_string = False
+	escape = False
+	
+	for idx in range( start, len( text_value ) ):
+		char = text_value[ idx ]
+		
+		if escape:
+			escape = False
+			continue
+		
+		if char == '\\':
+			escape = True
+			continue
+		
+		if char == '"':
+			in_string = not in_string
+			continue
+		
+		if in_string:
+			continue
+		
+		if char == '{':
+			depth += 1
+		elif char == '}':
+			depth -= 1
+			
+			if depth == 0:
+				candidate = text_value[ start:idx + 1 ]
+				parsed = json.loads( candidate )
+				if not isinstance( parsed, dict ):
+					raise ValueError( 'The parsed function call was not a JSON object.' )
+				
+				return parsed
+	
+	raise ValueError( 'No complete JSON object was found.' )
+
+def normalize_tool_call( tool_call: Dict[ str, Any ] ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Normalize a model-generated tool call into the app contract:
+		{"name": "...", "arguments": {...}}.
+
+		Parameters:
+		-----------
+		tool_call : Dict[str, Any]
+			Parsed tool-call JSON object.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Normalized tool-call object.
+	"""
+	if not isinstance( tool_call, dict ):
+		raise ValueError( 'Tool call must be a dictionary.' )
+	
+	name = str( tool_call.get( 'name', '' ) or tool_call.get( 'function', '' ) or '' ).strip( )
+	args = tool_call.get( 'arguments', { } )
+	
+	if not name:
+		raise ValueError( 'Tool call is missing a function name.' )
+	
+	if isinstance( args, str ):
+		try:
+			args = extract_json_object_from_text( args )
+		except Exception:
+			args = { 'text': args }
+	
+	if not isinstance( args, dict ):
+		raise ValueError( 'Tool-call arguments must be a dictionary.' )
+	
+	return {
+			'name': name,
+			'arguments': args
+	}
+
+def get_allowed_function_names( ) -> List[ str ]:
+	"""
+		Purpose:
+		--------
+		Return the function names that app.py is allowed to execute. This prevents model
+		output from invoking arbitrary functions.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		List[str]
+			Allowlisted function names.
+	"""
+	return [
+			'summarize_text',
+			'extract_keywords',
+			'web_browse_url'
+	]
+
+def summarize_text_tool( text: str, max_bullets: int = 5 ) -> str:
+	"""
+		Purpose:
+		--------
+		Summarize supplied text using a deterministic local sentence extraction fallback.
+		This is intentionally non-agentic and does not execute arbitrary model code.
+
+		Parameters:
+		-----------
+		text : str
+			Text to summarize.
+
+		max_bullets : int
+			Maximum number of bullets to return.
+
+		Returns:
+		--------
+		str
+			Bullet summary.
+	"""
+	text_value = re.sub( r'\s+', ' ', str( text or '' ) ).strip( )
+	if not text_value:
+		return 'No text was provided.'
+	
+	try:
+		bullet_count = int( max_bullets )
+	except Exception:
+		bullet_count = 5
+	
+	if bullet_count <= 0:
+		bullet_count = 5
+	
+	sentences = re.split( r'(?<=[.!?])\s+', text_value )
+	sentences = [ s.strip( ) for s in sentences if s and s.strip( ) ]
+	selected = sentences[ :bullet_count ]
+	
+	if not selected:
+		selected = [ text_value[ :800 ] ]
+	
+	return '\n'.join( [ f'- {sentence}' for sentence in selected ] )
+
+def extract_keywords_tool( text: str, max_keywords: int = 15 ) -> str:
+	"""
+		Purpose:
+		--------
+		Extract simple frequency-ranked keywords from supplied text without external
+		dependencies.
+
+		Parameters:
+		-----------
+		text : str
+			Text to analyze.
+
+		max_keywords : int
+			Maximum number of keywords to return.
+
+		Returns:
+		--------
+		str
+			Comma-separated keyword list.
+	"""
+	text_value = str( text or '' ).lower( )
+	if not text_value:
+		return ''
+	
+	try:
+		keyword_count = int( max_keywords )
+	except Exception:
+		keyword_count = 15
+	
+	if keyword_count <= 0:
+		keyword_count = 15
+	
+	stop_words = {
+			'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+			'has', 'have', 'in', 'is', 'it', 'its', 'of', 'on', 'or', 'that',
+			'the', 'their', 'this', 'to', 'was', 'were', 'with', 'you', 'your'
+	}
+	
+	words = re.findall( r'[a-zA-Z][a-zA-Z0-9_\-]{2,}', text_value )
+	counts: Dict[ str, int ] = { }
+	
+	for word in words:
+		if word in stop_words:
+			continue
+		
+		counts[ word ] = counts.get( word, 0 ) + 1
+	
+	ranked = sorted( counts.items( ), key=lambda item: item[ 1 ], reverse=True )
+	keywords = [ word for word, _ in ranked[ :keyword_count ] ]
+	
+	return ', '.join( keywords )
+
+def is_private_or_local_hostname( hostname: str ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether a hostname resolves to a local, loopback, private, reserved, or
+		link-local address. This blocks server-side requests to private network resources.
+
+		Parameters:
+		-----------
+		hostname : str
+			URL hostname.
+
+		Returns:
+		--------
+		bool
+			True when the hostname is private or local; otherwise False.
+	"""
+	import ipaddress
+	import socket
+	
+	host_value = str( hostname or '' ).strip( ).lower( )
+	if not host_value:
+		return True
+	
+	if host_value in ('localhost', '0.0.0.0') or host_value.endswith( '.local' ):
+		return True
+	
+	try:
+		ip_value = ipaddress.ip_address( host_value )
+		return bool(
+			ip_value.is_private
+			or ip_value.is_loopback
+			or ip_value.is_link_local
+			or ip_value.is_reserved
+			or ip_value.is_multicast
+			or ip_value.is_unspecified
+		)
+	except Exception:
+		pass
+	
+	try:
+		addresses = socket.getaddrinfo( host_value, None )
+	except Exception:
+		return True
+	
+	for address in addresses:
+		try:
+			ip_text = address[ 4 ][ 0 ]
+			ip_value = ipaddress.ip_address( ip_text )
+			if (
+					ip_value.is_private
+					or ip_value.is_loopback
+					or ip_value.is_link_local
+					or ip_value.is_reserved
+					or ip_value.is_multicast
+					or ip_value.is_unspecified
+			):
+				return True
+		except Exception:
+			return True
+	
+	return False
+
+def validate_web_url( url: str, allowed_domain: str = '' ) -> str:
+	"""
+		Purpose:
+		--------
+		Validate an outbound web-browsing URL. Only HTTP and HTTPS URLs are allowed, and
+		private/local network targets are blocked.
+
+		Parameters:
+		-----------
+		url : str
+			User-supplied URL.
+
+		allowed_domain : str
+			Optional allowed domain suffix.
+
+		Returns:
+		--------
+		str
+			Validated URL.
+	"""
+	from urllib.parse import urlparse
+	
+	url_value = str( url or '' ).strip( )
+	if not url_value:
+		raise ValueError( 'A URL is required.' )
+	
+	parsed = urlparse( url_value )
+	if parsed.scheme.lower( ) not in ('http', 'https'):
+		raise ValueError( 'Only http and https URLs are allowed.' )
+	
+	if not parsed.netloc or not parsed.hostname:
+		raise ValueError( 'The URL must include a valid host.' )
+	
+	hostname = str( parsed.hostname or '' ).strip( ).lower( )
+	
+	if is_private_or_local_hostname( hostname ):
+		raise ValueError( 'Private, local, loopback, reserved, and link-local hosts are blocked.' )
+	
+	domain_value = str( allowed_domain or '' ).strip( ).lower( )
+	if domain_value:
+		if domain_value.startswith( 'http://' ) or domain_value.startswith( 'https://' ):
+			domain_value = str( urlparse( domain_value ).hostname or '' ).strip( ).lower( )
+		
+		domain_value = domain_value.lstrip( '.' )
+		if hostname != domain_value and not hostname.endswith( f'.{domain_value}' ):
+			raise ValueError( f'The URL host is not within the allowed domain: {domain_value}' )
+	
+	return url_value
+
+def html_to_readable_text( html_text: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Convert HTML to readable text using a dependency-free parser fallback.
+
+		Parameters:
+		-----------
+		html_text : str
+			Raw HTML text.
+
+		Returns:
+		--------
+		str
+			Readable extracted text.
+	"""
+	import html
+	
+	text_value = str( html_text or '' )
+	text_value = re.sub( r'(?is)<(script|style|noscript).*?>.*?</\1>', ' ', text_value )
+	text_value = re.sub( r'(?is)<br\s*/?>', '\n', text_value )
+	text_value = re.sub( r'(?is)</p\s*>', '\n\n', text_value )
+	text_value = re.sub( r'(?is)<[^>]+>', ' ', text_value )
+	text_value = html.unescape( text_value )
+	text_value = re.sub( r'[ \t\r\f\v]+', ' ', text_value )
+	text_value = re.sub( r'\n\s+', '\n', text_value )
+	text_value = re.sub( r'\n{3,}', '\n\n', text_value )
+	
+	return text_value.strip( )
+
+def fetch_web_text( url: str, allowed_domain: str = '', timeout_seconds: int = 15,
+		max_chars: int = 12000 ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Fetch readable text from a public HTTP/HTTPS URL with timeout, size, and private
+		network safeguards.
+
+		Parameters:
+		-----------
+		url : str
+			User-supplied URL.
+
+		allowed_domain : str
+			Optional allowed domain suffix.
+
+		timeout_seconds : int
+			Network timeout in seconds.
+
+		max_chars : int
+			Maximum readable text characters returned.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Web fetch result.
+	"""
+	from urllib.request import Request, urlopen
+	
+	try:
+		timeout_value = int( timeout_seconds )
+	except Exception:
+		timeout_value = 15
+	
+	if timeout_value <= 0:
+		timeout_value = 15
+	
+	try:
+		max_char_value = int( max_chars )
+	except Exception:
+		max_char_value = 12000
+	
+	if max_char_value <= 0:
+		max_char_value = 12000
+	
+	validated_url = validate_web_url( url=url, allowed_domain=allowed_domain )
+	
+	request = Request(
+		validated_url,
+		headers={
+				'User-Agent': 'Loca-Llama/1.0 TextFetcher'
+		}
+	)
+	
+	with urlopen( request, timeout=timeout_value ) as response:
+		content_type = str( response.headers.get( 'Content-Type', '' ) or '' )
+		raw = response.read( max_char_value * 4 )
+	
+	text = raw.decode( 'utf-8', errors='ignore' )
+	if 'html' in content_type.lower( ) or '<html' in text.lower( ):
+		readable_text = html_to_readable_text( text )
+	else:
+		readable_text = re.sub( r'\s+', ' ', text ).strip( )
+	
+	if len( readable_text ) > max_char_value:
+		readable_text = readable_text[ :max_char_value ].strip( )
+	
+	return {
+			'url': validated_url,
+			'content_type': content_type,
+			'text': readable_text,
+			'length': len( readable_text )
+	}
+
+def web_browse_url_tool( url: str, prompt: str = '', allowed_domain: str = '',
+		max_chars: int = 12000 ) -> str:
+	"""
+		Purpose:
+		--------
+		Fetch a public web page and return bounded text suitable for model grounding.
+
+		Parameters:
+		-----------
+		url : str
+			User-supplied URL.
+
+		prompt : str
+			Optional user task for the fetched content.
+
+		allowed_domain : str
+			Optional allowed domain suffix.
+
+		max_chars : int
+			Maximum readable text characters returned.
+
+		Returns:
+		--------
+		str
+			Readable web context.
+	"""
+	if not model_supports_capability( 'web_browsing' ):
+		return get_capability_status_message( 'web_browsing' )
+	
+	result = fetch_web_text(
+		url=url,
+		allowed_domain=allowed_domain,
+		timeout_seconds=15,
+		max_chars=max_chars
+	)
+	
+	task_text = str( prompt or '' ).strip( )
+	parts = [
+			f'Web Source: {result.get( "url", "" )}',
+			f'Content Type: {result.get( "content_type", "" )}',
+			f'Characters: {result.get( "length", 0 )}'
+	]
+	
+	if task_text:
+		parts.append( f'User Web Task: {task_text}' )
+	
+	parts.append( 'Fetched Web Text:' )
+	parts.append( str( result.get( 'text', '' ) or '' ) )
+	
+	return '\n\n'.join( parts ).strip( )
+
+def execute_allowlisted_function( tool_call: Dict[ str, Any ] ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Execute a normalized, allowlisted app function. Arbitrary model-generated function
+		names are rejected.
+
+		Parameters:
+		-----------
+		tool_call : Dict[str, Any]
+			Normalized tool-call object.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Tool execution result.
+	"""
+	normalized = normalize_tool_call( tool_call )
+	name = normalized[ 'name' ]
+	args = normalized[ 'arguments' ]
+	
+	if name not in get_allowed_function_names( ):
+		raise ValueError( f'Function "{name}" is not allowlisted.' )
+	
+	if name == 'summarize_text':
+		result = summarize_text_tool(
+			text=str( args.get( 'text', '' ) or '' ),
+			max_bullets=int( args.get( 'max_bullets', 5 ) or 5 )
+		)
+	
+	elif name == 'extract_keywords':
+		result = extract_keywords_tool(
+			text=str( args.get( 'text', '' ) or '' ),
+			max_keywords=int( args.get( 'max_keywords', 15 ) or 15 )
+		)
+	
+	elif name == 'web_browse_url':
+		result = web_browse_url_tool(
+			url=str( args.get( 'url', '' ) or '' ),
+			prompt=str( args.get( 'prompt', '' ) or '' ),
+			allowed_domain=str( args.get( 'allowed_domain', '' ) or '' ),
+			max_chars=int( args.get( 'max_chars', 12000 ) or 12000 )
+		)
+	
+	else:
+		raise ValueError( f'Function "{name}" is not implemented.' )
+	
+	return {
+			'name': name,
+			'arguments': args,
+			'result': result
+	}
+
+def build_tool_call_generation_prompt( user_task: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Build a focused prompt that asks the selected model to emit one strict JSON
+		function-call object.
+
+		Parameters:
+		-----------
+		user_task : str
+			User task to translate into a tool call.
+
+		Returns:
+		--------
+		str
+			Tool-call generation prompt.
+	"""
+	schema_text = str( st.session_state.get( 'function_schema_text', '' ) or '' ).strip( )
+	available_functions = ', '.join( get_allowed_function_names( ) )
+	
+	return f'''Create one app-mediated function call for the user task below.
+		
+		Rules:
+		- Return one strict JSON object only.
+		- Do not wrap the object in markdown.
+		- Use this shape: {{"name":"function_name","arguments":{{...}}}}
+		- Use only one of these allowlisted functions: {available_functions}
+		- Do not invent function names.
+		- Do not include prose outside the JSON object.
+		
+		Current function schema:
+		{schema_text}
+		
+		User task:
+		{user_task}'''
+
+def generate_function_call_json( user_task: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Ask the selected local model to generate a strict JSON function-call object.
+
+		Parameters:
+		-----------
+		user_task : str
+			User task to convert into a function call.
+
+		Returns:
+		--------
+		str
+			Generated model text.
+	"""
+	if not model_supports_capability( 'function_calling' ):
+		return get_capability_status_message( 'function_calling' )
+	
+	task_text = str( user_task or '' ).strip( )
+	if not task_text:
+		return 'No function-call task was provided.'
+	
+	prior_function_enabled = bool( st.session_state.get( 'function_call_enabled', False ) )
+	st.session_state[ 'function_call_enabled' ] = True
+	
+	try:
+		response = run_llm_turn(
+			user_input=build_tool_call_generation_prompt( task_text ),
+			temperature=0.0,
+			top_p=1.0,
+			repeat_penalty=float( st.session_state.get( 'repeat_penalty', 1.1 ) ),
+			max_tokens=512,
+			stream=False,
+			output=None
+		)
+	finally:
+		st.session_state[ 'function_call_enabled' ] = prior_function_enabled
+	
+	return str( response or '' ).strip( )
+
+def execute_tool_call_text( tool_call_text: str ) -> Dict[ str, Any ]:
+	"""
+		Purpose:
+		--------
+		Parse and execute model-generated tool-call text through the app's allowlisted
+		function layer.
+
+		Parameters:
+		-----------
+		tool_call_text : str
+			Model-generated function-call JSON text.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Tool execution result.
+	"""
+	parsed = extract_json_object_from_text( tool_call_text )
+	normalized = normalize_tool_call( parsed )
+	return execute_allowlisted_function( normalized )
+
+def build_tool_result_final_prompt( user_task: str, tool_result: Dict[ str, Any ] ) -> str:
+	"""
+		Purpose:
+		--------
+		Build a final-answer prompt from a validated tool execution result.
+
+		Parameters:
+		-----------
+		user_task : str
+			Original user task.
+
+		tool_result : Dict[str, Any]
+			Executed tool result.
+
+		Returns:
+		--------
+		str
+			Final answer prompt.
+	"""
+	return f'''Use the validated app tool result below to answer the user.
+
+		User task:
+		{str( user_task or '' ).strip( )}
+		
+		Tool used:
+		{tool_result.get( 'name', '' )}
+		
+		Tool arguments:
+		{tool_result.get( 'arguments', { } )}
+		
+		Tool result:
+		{tool_result.get( 'result', '' )}
+		
+		Return a useful final answer grounded in the tool result.'''
+
+def generate_tool_grounded_final_answer( user_task: str, tool_result: Dict[ str, Any ] ) -> str:
+	"""
+		Purpose:
+		--------
+		Generate a final answer grounded in an executed tool result.
+
+		Parameters:
+		-----------
+		user_task : str
+			Original user task.
+
+		tool_result : Dict[str, Any]
+			Executed tool result.
+
+		Returns:
+		--------
+		str
+			Model-generated final answer.
+	"""
+	try:
+		return run_llm_turn(
+			user_input=build_tool_result_final_prompt(
+				user_task=user_task,
+				tool_result=tool_result
+			),
+			temperature=float( st.session_state.get( 'temperature', 0.0 ) ),
+			top_p=float( st.session_state.get( 'top_percent', 0.95 ) ),
+			repeat_penalty=float( st.session_state.get( 'repeat_penalty', 1.1 ) ),
+			max_tokens=int( st.session_state.get( 'max_tokens', 1024 ) ) or 1024,
+			stream=False,
+			output=None
+		)
+	except Exception as e:
+		return f'Final answer generation failed: {e}'
+
+def send_web_context_to_text_generation( context_text: str ) -> None:
+	"""
+		Purpose:
+		--------
+		Send fetched web context into the shared Text Generation document context buffer.
+
+		Parameters:
+		-----------
+		context_text : str
+			Web context text.
+
+		Returns:
+		--------
+		None
+	"""
+	context_value = str( context_text or '' ).strip( )
+	if not context_value:
+		return
+	
+	existing_docs = st.session_state.get( 'basic_docs', [ ] )
+	if not isinstance( existing_docs, list ):
+		existing_docs = [ ]
+	
+	existing_docs.append( context_value )
+	st.session_state[ 'basic_docs' ] = existing_docs
+	st.session_state[ 'use_document_context' ] = True
+	
+initialize_model_mode_state( )
+
 # ==============================================================================
 # UTILITIES
 # ==============================================================================
@@ -374,6 +2329,90 @@ if 'dm_register_uploaded_images' not in st.session_state:
 def image_to_base64( path: str ) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
+
+def get_model_logo_for_state( model_name: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the logo path associated with the selected model.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		Returns:
+		--------
+		str
+			Configured logo path.
+	"""
+	model_logo_map: Dict[ str, str ] = {
+			'Bro': getattr( cfg, 'BRO_LOGO', '' ),
+			'Gipity': getattr( cfg, 'GIPITY_LOGO', '' ),
+			'Buddy': getattr( cfg, 'BUDDY_LOGO', '' ),
+			'Boo': getattr( cfg, 'BOO_LOGO', '' ),
+			'Jimi': getattr( cfg, 'JIMI_LOGO', '' ),
+			'Leeroy': getattr( cfg, 'LEEROY_LOGO', '' ),
+			'Nisty': getattr( cfg, 'NISTY_LOGO', '' )
+	}
+	
+	return str( model_logo_map.get( str( model_name or '' ), '' ) or '' )
+
+def resolve_resource_path( path: str ) -> Path:
+	"""
+		Purpose:
+		--------
+		Resolve a configured resource path relative to the application base directory
+		when the supplied path is not already absolute.
+
+		Parameters:
+		-----------
+		path : str
+			Configured resource path.
+
+		Returns:
+		--------
+		Path
+			Resolved resource path.
+	"""
+	path_value = str( path or '' ).strip( )
+	if not path_value:
+		return Path( '' )
+	
+	resource_path = Path( path_value )
+	if resource_path.is_absolute( ):
+		return resource_path
+	
+	return Path( cfg.BASE_DIR ) / resource_path
+
+def render_selected_model_logo( model_name: str, size: str='large' ) -> None:
+	"""
+		Purpose:
+		--------
+		Render the selected model logo using Streamlit's native logo API so the logo
+		remains visible when the sidebar is collapsed.
+
+		Parameters:
+		-----------
+		model_name : str
+			Selected local model name.
+
+		size : str
+			Streamlit logo size. Expected values are 'small', 'medium', or 'large'.
+
+		Returns:
+		--------
+		None
+	"""
+	logo_path = get_model_logo_for_state( model_name )
+	resolved_logo_path = resolve_resource_path( logo_path )
+	if logo_path and resolved_logo_path.exists( ):
+		st.logo( image=str( resolved_logo_path ), icon_image=str( resolved_logo_path ), size=size )
+		return
+	
+	default_logo_path = resolve_resource_path( getattr( cfg, 'LOGO', '' ) )
+	if default_logo_path.exists( ):
+		st.logo( image=str( default_logo_path ), icon_image=str( default_logo_path ), size=size )
 
 def cosine_similarity( a: np.ndarray, b: np.ndarray ) -> float:
     denom = np.linalg.norm(a) * np.linalg.norm(b)
@@ -758,7 +2797,9 @@ def build_task_instruction_block( ) -> str:
 	"""
 		Purpose:
 		--------
-		Build a task-specific instruction block for Text Generation mode.
+		Build a task-specific instruction block for Text Generation mode, including
+		model-gated Thinking, Coding, and Function Calling directives for Gemma 4 and
+		GPT-OSS-aligned local models.
 
 		Parameters:
 		-----------
@@ -767,6 +2808,7 @@ def build_task_instruction_block( ) -> str:
 		Returns:
 		--------
 		str
+			Task instruction block.
 	"""
 	task_preset = str( st.session_state.get( 'task_preset', 'Chat' ) or 'Chat' ).strip( )
 	response_format = str(
@@ -776,7 +2818,8 @@ def build_task_instruction_block( ) -> str:
 	answer_only = bool( st.session_state.get( 'answer_only', False ) )
 	use_self_check = bool( st.session_state.get( 'use_self_check', False ) )
 	deterministic_reasoning = bool( st.session_state.get( 'deterministic_reasoning', False ) )
-	coding_language = str( st.session_state.get( 'coding_language', 'Python' ) or 'Python' ).strip( )
+	coding_language = str(
+		st.session_state.get( 'coding_language', 'Python' ) or 'Python' ).strip( )
 	coding_task = str( st.session_state.get( 'coding_task', 'Generate' ) or 'Generate' ).strip( )
 	coding_include_comments = bool( st.session_state.get( 'coding_include_comments', True ) )
 	coding_editor_format = bool( st.session_state.get( 'coding_editor_format', True ) )
@@ -785,10 +2828,23 @@ def build_task_instruction_block( ) -> str:
 			str( st.session_state.get(
 				'translation_target_language', 'English' ) or 'English' ).strip( ))
 	
+	thinking_mode_enabled = bool( st.session_state.get( 'thinking_mode_enabled', False ) )
+	thinking_effort = str(
+		st.session_state.get( 'thinking_effort', 'Medium' ) or 'Medium' ).strip( )
+	thinking_summary_enabled = bool(
+		st.session_state.get( 'thinking_summary_enabled', True ) )
+	coding_mode_enabled = bool( st.session_state.get( 'coding_mode_enabled', False ) )
+	coding_test_request = bool( st.session_state.get( 'coding_test_request', False ) )
+	coding_explain_request = bool( st.session_state.get( 'coding_explain_request', False ) )
+	function_call_enabled = bool( st.session_state.get( 'function_call_enabled', False ) )
+	function_schema_text = str(
+		st.session_state.get( 'function_schema_text', '' ) or '' ).strip( )
+	
 	lines: List[ str ] = [ ]
 	lines.append( 'Task Preset:' )
 	lines.append( f'- Active Task: {task_preset}' )
 	lines.append( f'- Response Format: {response_format}' )
+	
 	if task_preset == 'Reasoning':
 		lines.append( f'- Reasoning Depth: {reasoning_depth}' )
 		lines.append(
@@ -811,8 +2867,7 @@ def build_task_instruction_block( ) -> str:
 			lines.append( '- Minimize comments unless required for clarity.' )
 		if coding_editor_format:
 			lines.append(
-				'- Format the output as editor-ready source code, not as explanatory pseudo-code.'
-			)
+				'- Format the output as editor-ready source code, not as explanatory pseudo-code.' )
 		if coding_fenced_output:
 			lines.append(
 				'- Return code inside fenced markdown code blocks when code is produced.' )
@@ -835,6 +2890,86 @@ def build_task_instruction_block( ) -> str:
 	
 	else:
 		lines.append( '- Respond as a general-purpose assistant.' )
+	
+	if thinking_mode_enabled and model_supports_capability( 'thinking' ):
+		lines.append( '' )
+		lines.append( 'Thinking Capability:' )
+		lines.append( f'- Thinking Effort: {thinking_effort}' )
+		lines.append(
+			'- Use private internal reasoning to solve the task, but do not expose hidden '
+			'chain-of-thought.' )
+		
+		if thinking_summary_enabled:
+			lines.append(
+				'- Provide a concise reasoning summary only when it improves the usefulness '
+				'of the final answer.' )
+		else:
+			lines.append(
+				'- Return the final answer without a separate reasoning summary.' )
+	
+	elif thinking_mode_enabled:
+		lines.append( '' )
+		lines.append( 'Thinking Capability:' )
+		lines.append(
+			f'- {get_selected_model_name( )} does not advertise the Thinking capability. '
+			'Use the standard reasoning controls only.' )
+	
+	if coding_mode_enabled and model_supports_capability( 'coding' ):
+		lines.append( '' )
+		lines.append( 'Advanced Coding Capability:' )
+		lines.append( f'- Primary Language: {coding_language}' )
+		lines.append( f'- Requested Coding Operation: {coding_task}' )
+		lines.append(
+			'- Preserve existing application structure and generate paste-ready source code.' )
+		
+		if coding_test_request:
+			lines.append(
+				'- Include a minimal verification or test strategy when appropriate.' )
+		
+		if coding_explain_request:
+			lines.append(
+				'- Include a concise explanation of the implementation after the code.' )
+	
+	elif coding_mode_enabled:
+		lines.append( '' )
+		lines.append( 'Advanced Coding Capability:' )
+		lines.append(
+			f'- {get_selected_model_name( )} does not advertise the advanced Coding '
+			'capability. Use the standard coding task controls only.' )
+	
+	if function_call_enabled and model_supports_capability( 'function_calling' ):
+		lines.append( '' )
+		lines.append( 'Function Calling Capability:' )
+		lines.append(
+			'- When a function call is required, return a single strict JSON object and no '
+			'extra prose.' )
+		lines.append(
+			'- The JSON object must use this shape: '
+			'{"name":"function_name","arguments":{...}}' )
+		lines.append(
+			'- Do not invent functions. Use only the function schema supplied below.' )
+		
+		if is_gipity_model( ):
+			lines.append(
+				'- For GPT-OSS/Gipity, treat function calling as an app-mediated tool call. '
+				'The app will validate and execute only allowlisted functions.' )
+		
+		if is_gemma4_model( ):
+			lines.append(
+				'- For Gemma 4 models, generate a valid function-call object only when the '
+				'user request clearly requires structured tool invocation.' )
+		
+		if function_schema_text:
+			lines.append( '' )
+			lines.append( 'Available Function Schema:' )
+			lines.append( function_schema_text )
+	
+	elif function_call_enabled:
+		lines.append( '' )
+		lines.append( 'Function Calling Capability:' )
+		lines.append(
+			f'- {get_selected_model_name( )} does not advertise function calling. '
+			'Answer normally and do not emit tool-call JSON.' )
 	
 	return '\n'.join( lines ).strip( )
 
@@ -869,11 +3004,289 @@ def build_effective_prompt_preview( user_input: str ) -> str:
 	
 	return '\n\n'.join( preview_parts ).strip( )
 
-def get_runtime_llm( ) -> Llama:
+# ==============================================================================
+# SYSTEM INSTRUCTIONS RENDERER
+# ==============================================================================
+
+def get_preset_system_instruction( task_preset: str ) -> str:
 	"""
 		Purpose:
 		--------
-		Load the llama.cpp model using the currently selected runtime settings.
+		Return a starter system-instruction preset for the selected task type.
+
+		Parameters:
+		-----------
+		task_preset : str
+			Selected task preset.
+
+		Returns:
+		--------
+		str
+			System-instruction preset text.
+	"""
+	preset_name = str( task_preset or 'Chat' ).strip( )
+	
+	preset_map: Dict[ str, str ] = {
+			'Chat':
+				'You are Loca, a helpful local assistant. Be accurate, practical, and concise.',
+			'Reasoning':
+				'Solve the task carefully. Use a careful internal process, then return a clear '
+				'final answer.',
+			'Coding':
+				'Produce correct, editor-ready code. Preserve the requested language, structure, '
+				'and implementation intent.',
+			'Translation':
+				'Translate faithfully while preserving meaning, tone, and structure.',
+			'Summarization':
+				'Summarize faithfully and preserve key facts, names, dates, and conclusions.',
+			'Extraction':
+				'Extract only supported facts. Do not invent missing values.'
+	}
+	
+	return preset_map.get( preset_name, preset_map[ 'Chat' ] )
+
+def get_system_instruction_action_key( prefix: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the pending action key used by a specific System Instructions renderer.
+
+		Parameters:
+		-----------
+		prefix : str
+			Renderer prefix.
+
+		Returns:
+		--------
+		str
+			Pending action session-state key.
+	"""
+	return f'{prefix}_pending_system_instruction_action'
+
+def get_system_instruction_template_key( prefix: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the template-select widget key used by a specific System Instructions
+		renderer.
+
+		Parameters:
+		-----------
+		prefix : str
+			Renderer prefix.
+
+		Returns:
+		--------
+		str
+			Template widget session-state key.
+	"""
+	return f'{prefix}_instructions_template'
+
+def get_system_instruction_pending_template_key( prefix: str ) -> str:
+	"""
+		Purpose:
+		--------
+		Return the pending template key used by a specific System Instructions renderer.
+
+		Parameters:
+		-----------
+		prefix : str
+			Renderer prefix.
+
+		Returns:
+		--------
+		str
+			Pending template session-state key.
+	"""
+	return f'{prefix}_pending_system_template_name'
+
+def request_system_template_change( prefix: str ) -> None:
+	"""
+		Purpose:
+		--------
+		Request a system-instruction template change without directly modifying the
+		widget-owned system_instructions key.
+
+		Parameters:
+		-----------
+		prefix : str
+			Renderer prefix.
+
+		Returns:
+		--------
+		None
+	"""
+	template_key = get_system_instruction_template_key( prefix )
+	pending_key = get_system_instruction_pending_template_key( prefix )
+	name = st.session_state.get( template_key, None )
+	
+	if name:
+		st.session_state[ pending_key ] = str( name )
+
+def request_system_instruction_action( prefix: str, action: str ) -> None:
+	"""
+		Purpose:
+		--------
+		Request a pending system-instruction action without directly modifying the
+		widget-owned system_instructions key.
+
+		Parameters:
+		-----------
+		prefix : str
+			Renderer prefix.
+
+		action : str
+			Requested action name.
+
+		Returns:
+		--------
+		None
+	"""
+	action_key = get_system_instruction_action_key( prefix )
+	st.session_state[ action_key ] = str( action or '' )
+
+def process_pending_system_instruction_requests( prefix: str ) -> None:
+	"""
+		Purpose:
+		--------
+		Process pending System Instructions requests before the system_instructions text
+		area is instantiated. This is the only safe place to modify the shared
+		system_instructions widget-owned key.
+
+		Parameters:
+		-----------
+		prefix : str
+			Renderer prefix.
+
+		Returns:
+		--------
+		None
+	"""
+	template_key = get_system_instruction_template_key( prefix )
+	pending_template_key = get_system_instruction_pending_template_key( prefix )
+	action_key = get_system_instruction_action_key( prefix )
+	
+	pending_template_name = st.session_state.pop( pending_template_key, None )
+	if pending_template_name:
+		template_text = fetch_prompt_text( cfg.DB_PATH, str( pending_template_name ) )
+		
+		if template_text is not None:
+			st.session_state[ 'system_instructions' ] = str( template_text )
+			st.session_state[ 'active_prompt_caption' ] = str( pending_template_name )
+	
+	pending_action = st.session_state.pop( action_key, None )
+	if pending_action == 'clear':
+		st.session_state[ 'system_instructions' ] = ''
+		st.session_state[ 'active_prompt_caption' ] = ''
+		
+		if template_key in st.session_state:
+			del st.session_state[ template_key ]
+	
+	elif pending_action == 'convert':
+		text = st.session_state.get( 'system_instructions', '' )
+		
+		if isinstance( text, str ) and text.strip( ):
+			src = text.strip( )
+			
+			if cfg.XML_BLOCK_PATTERN.search( src ):
+				converted = convert_xml( src )
+			else:
+				converted = convert_markdown( src )
+			
+			st.session_state[ 'system_instructions' ] = converted
+	
+	elif pending_action == 'apply_preset':
+		task_preset = str( st.session_state.get( 'task_preset', 'Chat' ) or 'Chat' ).strip( )
+		st.session_state[ 'system_instructions' ] = get_preset_system_instruction( task_preset )
+		st.session_state[ 'active_prompt_caption' ] = f'{task_preset} Preset'
+
+def render_system_instructions( prefix: str, include_apply_preset: bool = False,
+		include_preview: bool = False ) -> None:
+	"""
+		Purpose:
+		--------
+		Render a Streamlit-safe shared System Instructions control surface. All writes to
+		the widget-owned system_instructions key are processed before the text-area widget
+		is instantiated.
+
+		Parameters:
+		-----------
+		prefix : str
+			Unique renderer prefix, such as 'text' or 'docqna'.
+
+		include_apply_preset : bool
+			When True, show the Apply Preset button.
+
+		include_preview : bool
+			When True, show the Preview Prompt button and preview text area.
+
+		Returns:
+		--------
+		None
+	"""
+	process_pending_system_instruction_requests( prefix )
+	
+	template_key = get_system_instruction_template_key( prefix )
+	prompt_names = fetch_prompt_names( cfg.DB_PATH )
+	
+	if not prompt_names:
+		prompt_names = [ '' ]
+	
+	in_left, in_right = st.columns( [ 0.8, 0.2 ] )
+	
+	with in_left:
+		st.text_area( label='Enter Text', height=120,
+			width='stretch', help=cfg.SYSTEM_INSTRUCTIONS, key='system_instructions' )
+	
+	with in_right:
+		st.selectbox( label='Use Template', options=prompt_names,
+			index=None, key=template_key,
+			on_change=request_system_template_change, args=(prefix,) )
+	
+	if include_apply_preset and include_preview:
+		btn_c1, btn_c2, btn_c3, btn_c4 = st.columns( [ 0.35, 0.2, 0.2, 0.25 ] )
+		
+		with btn_c1:
+			st.button( label='Clear Instructions', width='stretch',
+				on_click=request_system_instruction_action, args=(prefix, 'clear') )
+		
+		with btn_c2:
+			st.button( label='XML <-> Markdown', width='stretch',
+				on_click=request_system_instruction_action, args=(prefix, 'convert') )
+		
+		with btn_c3:
+			st.button( label='Apply Preset', width='stretch',
+				on_click=request_system_instruction_action, args=(prefix, 'apply_preset') )
+		
+		with btn_c4:
+			if st.button( label='Preview Prompt', width='stretch', key=f'{prefix}_preview_prompt' ):
+				st.session_state[ 'preview_effective_prompt' ] = not bool(
+					st.session_state.get( 'preview_effective_prompt', False ) )
+	
+	else:
+		btn_c1, btn_c2 = st.columns( [ 0.8, 0.2 ] )
+		
+		with btn_c1:
+			st.button( label='Clear Instructions', width='stretch',
+				on_click=request_system_instruction_action, args=(prefix, 'clear') )
+		
+		with btn_c2:
+			st.button( label='XML <-> Markdown', width='stretch', on_click=request_system_instruction_action,
+				args=(prefix, 'convert') )
+	
+	if include_preview and bool( st.session_state.get( 'preview_effective_prompt', False ) ):
+		user_preview_input = str( st.session_state.get( 'last_preview_input', '' ) or '' )
+		
+		st.text_area( label='Effective Prompt Preview',
+			value=build_effective_prompt_preview( user_preview_input ), height=220,
+			disabled=True, key=f'{prefix}_effective_prompt_preview' )
+		
+def get_runtime_llm( ) -> Any | None:
+	"""
+		Purpose:
+		--------
+		Load the selected llama.cpp model using the currently selected model path and
+		runtime settings.
 
 		Parameters:
 		-----------
@@ -881,10 +3294,21 @@ def get_runtime_llm( ) -> Llama:
 
 		Returns:
 		--------
-		Llama
+		Any | None
+			Loaded llama.cpp model instance when available; otherwise None.
 	"""
+	synchronize_model_derived_state( )
+	
+	model_path = str(
+		st.session_state.get(
+			'selected_model_path',
+			get_model_path_for_state( get_selected_model_name( ) )
+		) or get_model_path_for_state( get_selected_model_name( ) )
+	)
+	
 	ctx_value = int( st.session_state.get( 'context_window', cfg.DEFAULT_CTX ) or cfg.DEFAULT_CTX )
 	thread_value = int( st.session_state.get( 'cpu_threads', cfg.CORES ) or cfg.CORES )
+	seed_value = int( st.session_state.get( 'random_seed', -1 ) or -1 )
 	
 	if ctx_value <= 0:
 		ctx_value = int( cfg.DEFAULT_CTX )
@@ -892,22 +3316,27 @@ def get_runtime_llm( ) -> Llama:
 	if thread_value <= 0:
 		thread_value = int( cfg.CORES )
 	
-	return load_llm( ctx_value, thread_value )
+	return load_llm( model_path=model_path, ctx=ctx_value,
+		threads=thread_value, seed=seed_value )
 
 def build_prompt( user_input: str ) -> str:
 	"""
 		Purpose:
 		--------
 		Build a llama.cpp-compatible prompt using unified system instructions, task-specific
-		Text Generation settings, optional semantic/basic context, and chat history.
+		Text Generation settings, optional semantic/basic context, and chat history. Semantic
+		context retrieval is guarded so Text Generation cannot crash when the embedder,
+		database, embeddings table, or stored vectors are unavailable or inconsistent.
 
 		Parameters:
 		-----------
 		user_input : str
+			User prompt text supplied by the Text Generation mode.
 
 		Returns:
 		--------
 		str
+			Prompt text formatted for the local llama.cpp chat template.
 	"""
 	global embedder
 	
@@ -918,16 +3347,17 @@ def build_prompt( user_input: str ) -> str:
 	use_document_context = bool( st.session_state.get( 'use_document_context', False ) )
 	basic_docs = st.session_state.get( 'basic_docs', [ ] )
 	messages = st.session_state.get( 'messages', [ ] )
+	user_text = str( user_input or '' )
 	
-	top_k_value = int( st.session_state.get( 'top_k', 0 ) )
+	top_k_value = int( st.session_state.get( 'top_k', 0 ) or 0 )
 	if top_k_value <= 0:
 		top_k_value = 4
 	
 	system_parts: List[ str ] = [ ]
 	if system_instructions:
-		system_parts.append( system_instructions )
+		system_parts.append( str( system_instructions ) )
 	if task_block:
-		system_parts.append( task_block )
+		system_parts.append( str( task_block ) )
 	
 	system_text = '\n\n'.join( [ p for p in system_parts if p ] ).strip( )
 	
@@ -936,19 +3366,50 @@ def build_prompt( user_input: str ) -> str:
 		prompt += f'<|system|>\n{system_text}\n</s>\n'
 	
 	if use_semantic:
-		with sqlite3.connect( cfg.DB_PATH ) as conn:
-			rows = conn.execute( 'SELECT chunk, vector FROM embeddings' ).fetchall( )
-		
-		if rows:
-			q = embedder.encode( [ user_input ] )[ 0 ]
-			scored = [ (c, cosine_similarity( q, np.frombuffer( v, dtype=np.float32 ) )) for c, v in
-			           rows ]
-			for c, _ in sorted( scored, key=lambda x: x[ 1 ], reverse=True )[ :top_k_value ]:
-				prompt += f'<|system|>\nSemantic Context:\n{c}\n</s>\n'
+		try:
+			if not is_embedder_available( globals( ).get( 'embedder', None ) ):
+				st.session_state[ 'semantic_status' ] = get_embedder_unavailable_message( )
+			else:
+				with sqlite3.connect( cfg.DB_PATH ) as conn:
+					rows = conn.execute(
+						'SELECT chunk, vector FROM embeddings' ).fetchall( )
+				
+				if rows:
+					q_raw = embedder.encode( [ user_text ], show_progress_bar=False )[ 0 ]
+					q = np.asarray( q_raw, dtype=np.float32 ).reshape( -1 )
+					scored: List[ Tuple[ str, float ] ] = [ ]
+					
+					for chunk, vector_blob in rows:
+						if not chunk or vector_blob is None:
+							continue
+						
+						vector = np.frombuffer( vector_blob, dtype=np.float32 )
+						if vector.size == 0 or vector.size != q.size:
+							continue
+						
+						score = cosine_similarity( q, vector )
+						scored.append( (str( chunk ), score) )
+					
+					if scored:
+						scored = sorted( scored, key=lambda x: x[ 1 ], reverse=True )
+						for chunk, score in scored[ :top_k_value ]:
+							prompt += f'<|system|>\nSemantic Context:\n{chunk}\n</s>\n'
+						
+						st.session_state[ 'semantic_status' ] = (
+								f'Loaded {min( len( scored ), top_k_value )} semantic context '
+								f'chunk(s) for Text Generation.')
+					else:
+						st.session_state[ 'semantic_status' ] = (
+								'Semantic context was enabled, but no compatible embedding '
+								'vectors were available for Text Generation.')
+		except Exception as e:
+			st.session_state[ 'semantic_status' ] = (
+					f'Semantic context was skipped because retrieval failed: {e}')
 	
 	if use_document_context and isinstance( basic_docs, list ):
-		for d in basic_docs[ :6 ]:
-			prompt += f'<|system|>\nDocument Context:\n{d}\n</s>\n'
+		for document_text in basic_docs[ :6 ]:
+			if document_text:
+				prompt += f'<|system|>\nDocument Context:\n{document_text}\n</s>\n'
 	
 	if use_chat_history and isinstance( messages, list ):
 		for msg in messages:
@@ -966,59 +3427,239 @@ def build_prompt( user_input: str ) -> str:
 			if role in ('user', 'assistant', 'system'):
 				prompt += f'<|{role}|>\n{content}\n</s>\n'
 	
-	prompt += f'<|user|>\n{user_input}\n</s>\n<|assistant|>\n'
+	prompt += f'<|user|>\n{user_text}\n</s>\n<|assistant|>\n'
 	return prompt
 
-def run_llm_turn( user_input: str, temperature: float, top_p: float, repeat_penalty: float,
-		max_tokens: int, stream: bool, output: Any=None ) -> str:
+def build_llama_call_args( max_tokens: int, temperature: float, top_p: float,
+		repeat_penalty: float, stream: bool ) -> Dict[ str, Any ]:
 	"""
 		Purpose:
 		--------
-		Run a single LLM turn using the current session-state runtime settings.
+		Build llama.cpp generation arguments from the current Streamlit runtime settings.
 
 		Parameters:
 		-----------
-		user_input : str
-		temperature : float
-		top_p : float
-		repeat_penalty : float
 		max_tokens : int
+			Maximum number of generated tokens.
+
+		temperature : float
+			Sampling temperature.
+
+		top_p : float
+			Nucleus sampling value.
+
+		repeat_penalty : float
+			Repeat penalty value.
+
 		stream : bool
-		output : Any | None
+			Whether streaming output is requested.
+
+		Returns:
+		--------
+		Dict[str, Any]
+			Generation argument dictionary for llama.cpp.
+	"""
+	max_token_value = int( max_tokens ) if int( max_tokens or 0 ) > 0 else 1024
+	temperature_value = float( temperature ) if temperature is not None else 0.0
+	top_p_value = float( top_p ) if top_p is not None else 0.95
+	repeat_penalty_value = float( repeat_penalty ) if repeat_penalty is not None else 1.1
+	top_k_value = int( st.session_state.get( 'top_k', 0 ) or 0 )
+	repeat_window_value = int( st.session_state.get( 'repeat_window', 0 ) or 0 )
+	
+	call_args: Dict[ str, Any ] = {
+			'stream': bool( stream ),
+			'max_tokens': max_token_value,
+			'temperature': temperature_value,
+			'top_p': top_p_value,
+			'repeat_penalty': repeat_penalty_value,
+			'stop': [ '</s>' ]
+	}
+	
+	if top_k_value > 0:
+		call_args[ 'top_k' ] = top_k_value
+	
+	if repeat_window_value > 0:
+		call_args[ 'repeat_last_n' ] = repeat_window_value
+	
+	return call_args
+
+def get_missing_model_message( ) -> str:
+	"""
+		Purpose:
+		--------
+		Build a clear user-facing message when the selected local GGUF model or required
+		llama.cpp dependency is not available.
+
+		Parameters:
+		-----------
+		None
 
 		Returns:
 		--------
 		str
+			Model availability message.
+	"""
+	model_name = get_selected_model_name( )
+	model_path = get_selected_model_path( )
+	
+	if Llama is None:
+		return (
+				'Local model inference is unavailable because `llama-cpp-python` is not '
+				'installed or could not be imported.\n\n'
+				f'**Selected Model:** {model_name}\n\n'
+				'Install or repair `llama-cpp-python`, then restart the Streamlit app.'
+		)
+	
+	if model_path:
+		return (
+				'The selected local GGUF model is unavailable.\n\n'
+				f'**Model:** {model_name}\n\n'
+				f'**Configured Path:** `{model_path}`\n\n'
+				'Verify that the file exists or update the model path in `config.py` '
+				'or the corresponding environment variable.'
+		)
+	
+	return (
+			'The selected local GGUF model is not configured.\n\n'
+			f'**Model:** {model_name}\n\n'
+			'Update the model registry path in `config.py` or provide the corresponding '
+			'environment variable.'
+	)
+
+def run_llm_turn( user_input: str, temperature: float, top_p: float, repeat_penalty: float,
+		max_tokens: int, stream: bool, output: Any = None ) -> str:
+	"""
+		Purpose:
+		--------
+		Run a single local llama.cpp LLM turn using the selected model, current prompt
+		contract, and runtime settings. Missing or unavailable GGUF models are handled
+		safely with a user-facing diagnostic response instead of a callable None failure.
+
+		Parameters:
+		-----------
+		user_input : str
+			User prompt or prepared application prompt.
+
+		temperature : float
+			Sampling temperature.
+
+		top_p : float
+			Nucleus sampling value.
+
+		repeat_penalty : float
+			Repeat penalty value.
+
+		max_tokens : int
+			Maximum number of generated tokens.
+
+		stream : bool
+			Whether to stream output tokens into the supplied Streamlit placeholder.
+
+		output : Any | None
+			Optional Streamlit output placeholder.
+
+		Returns:
+		--------
+		str
+			Generated response text or diagnostic message.
 	"""
 	if user_input is None:
 		return ''
 	
+	user_text = str( user_input or '' ).strip( )
+	if not user_text:
+		return ''
+	
+	synchronize_model_derived_state( )
+	
 	runtime_llm = get_runtime_llm( )
-	prompt = build_prompt( user_input )
-	max_token_value = int( max_tokens ) if int( max_tokens ) > 0 else 1024
-	temperature_value = float( temperature ) if temperature is not None else 0.0
-	top_p_value = float( top_p ) if top_p is not None else 0.95
-	repeat_penalty_value = float( repeat_penalty ) if repeat_penalty is not None else 1.1
-	if not stream:
-		resp = runtime_llm( prompt, stream=False, max_tokens=max_token_value,
-			temperature=temperature_value, top_p=top_p_value,
-			repeat_penalty=repeat_penalty_value, stop=[ '</s>' ] )
-		text = (resp.get( 'choices', [ { 'text': '' } ] )[ 0 ].get( 'text', '' ) or '')
-		return text.strip( )
+	if runtime_llm is None:
+		message = get_missing_model_message( )
+		if output is not None:
+			output.markdown( message )
+		return message
 	
-	buf = ''
-	if output is None:
-		output = st.empty( )
+	prompt = build_prompt( user_text )
+	call_args = build_llama_call_args(
+		max_tokens=max_tokens,
+		temperature=temperature,
+		top_p=top_p,
+		repeat_penalty=repeat_penalty,
+		stream=stream
+	)
 	
-	for chunk in runtime_llm( prompt, stream=True,
-			max_tokens=max_token_value, temperature=temperature_value,
-			top_p=top_p_value, repeat_penalty=repeat_penalty_value,
-			stop=[ '</s>' ] ):
-		buf += chunk[ 'choices' ][ 0 ][ 'text' ]
-		output.markdown( buf + '▌' )
+	try:
+		if not stream:
+			resp = runtime_llm( prompt, **call_args )
+			text = (
+					resp.get( 'choices', [ { 'text': '' } ] )[ 0 ]
+					.get( 'text', '' ) or ''
+			)
+			
+			return str( text ).strip( )
+		
+		buf = ''
+		if output is None:
+			output = st.empty( )
+		
+		for chunk in runtime_llm( prompt, **call_args ):
+			try:
+				token = chunk[ 'choices' ][ 0 ][ 'text' ]
+			except Exception:
+				token = ''
+			
+			if token:
+				buf += token
+				output.markdown( buf + '▌' )
+		
+		output.markdown( buf )
+		return buf.strip( )
 	
-	output.markdown( buf )
-	return buf.strip( )
+	except TypeError:
+		fallback_args: Dict[ str, Any ] = {
+				'stream': bool( stream ),
+				'max_tokens': int( max_tokens ) if int( max_tokens or 0 ) > 0 else 1024,
+				'temperature': float( temperature ) if temperature is not None else 0.0,
+				'top_p': float( top_p ) if top_p is not None else 0.95,
+				'repeat_penalty': float( repeat_penalty ) if repeat_penalty is not None else 1.1,
+				'stop': [ '</s>' ]
+		}
+		
+		if not stream:
+			resp = runtime_llm( prompt, **fallback_args )
+			text = ( resp.get( 'choices', [ { 'text': '' } ] )[ 0 ].get( 'text', '' ) or '' )
+			
+			return str( text ).strip( )
+		
+		buf = ''
+		if output is None:
+			output = st.empty( )
+		
+		for chunk in runtime_llm( prompt, **fallback_args ):
+			try:
+				token = chunk[ 'choices' ][ 0 ][ 'text' ]
+			except Exception:
+				token = ''
+			
+			if token:
+				buf += token
+				output.markdown( buf + '▌' )
+		
+		output.markdown( buf )
+		return buf.strip( )
+	
+	except Exception as e:
+		message = (
+				'Local model generation failed.\n\n'
+				f'**Model:** {get_selected_model_name( )}\n\n'
+				f'**Path:** `{get_selected_model_path( )}`\n\n'
+				f'**Error:** {e}'
+		)
+		
+		if output is not None:
+			output.markdown( message )
+		
+		return message
 
 def get_prompt_categories( ) -> List[ str ]:
 	"""
@@ -1134,7 +3775,7 @@ def build_starter_prompt_template( category: str, task_type: str, response_forma
 	format_value = str( response_format or 'Markdown' ).strip( )
 	language_value = str( language or 'English' ).strip( )
 	lines: List[ str ] = [ ]
-	lines.append( f'You are Bro, a local AI assistant operating in the category "{category_value}".' )
+	lines.append( f'You are Loca, a local AI assistant operating in the category "{category_value}".' )
 	lines.append( f'Primary task type: {task_value}.' )
 	lines.append( f'Response format: {format_value}.' )
 	lines.append( f'Preferred language: {language_value}.' )
@@ -1186,7 +3827,7 @@ def generate_prompt_template_draft( goal: str, constraints: str, style: str,
 		str
 	"""
 	prompt = f"""
-	Create a strong system prompt for the Bro local AI application.
+	Create a strong system prompt for the Loca local AI application.
 	
 	Category: {category}
 	Task Type: {task_type}
@@ -2143,14 +4784,6 @@ def drop_column( table: str, column: str ):
 		
 		conn.commit( )
 	
-def reset_selection( ):
-	st.session_state.pe_selected_id = None
-	st.session_state.pe_caption = ''
-	st.session_state.pe_name = ''
-	st.session_state.pe_text = ''
-	st.session_state.pe_version = ''
-	st.session_state.pe_id = 0
-
 def load_prompt( pid: int ) -> None:
 	with create_connection( ) as conn:
 		_select = f"SELECT Caption, Name, Text, Version, ID FROM {TABLE} WHERE PromptsId=?"
@@ -2177,8 +4810,174 @@ def get_ai_asset_tables( ) -> List[ str ]:
 		Returns:
 		--------
 		List[str]
+			AI-asset table names.
 	"""
-	return [ 'documents', 'document_chunks', 'document_embeddings', 'images' ]
+	return [
+			'documents',
+			'document_chunks',
+			'document_embeddings',
+			'images'
+	]
+
+def get_table_row_count( conn: sqlite3.Connection, table_name: str ) -> int:
+	"""
+		Purpose:
+		--------
+		Return the row count for a SQLite table.
+
+		Parameters:
+		-----------
+		conn : sqlite3.Connection
+			Open SQLite connection.
+
+		table_name : str
+			Table name.
+
+		Returns:
+		--------
+		int
+			Number of rows in the table.
+	"""
+	if not table_name:
+		return 0
+	
+	try:
+		row = conn.execute(
+			f'SELECT COUNT(*) FROM "{table_name}";'
+		).fetchone( )
+		
+		return int( row[ 0 ] ) if row else 0
+	except Exception:
+		return 0
+
+def get_ai_asset_counts( ) -> Dict[ str, int ]:
+	"""
+		Purpose:
+		--------
+		Count rows in the AI asset governance tables used by Document Q&A,
+		Semantic Search, and Data Management.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		Dict[str, int]
+			Dictionary keyed by AI asset table name with row counts as values.
+	"""
+	counts: Dict[ str, int ] = { }
+	tables = list_tables( )
+	
+	with create_connection( ) as conn:
+		for table_name in get_ai_asset_tables( ):
+			if table_name not in tables:
+				counts[ table_name ] = 0
+				continue
+			
+			counts[ table_name ] = get_table_row_count( conn, table_name )
+	
+	return counts
+
+def purge_orphaned_document_chunks( conn: sqlite3.Connection ) -> int:
+	"""
+		Purpose:
+		--------
+		Delete document chunk rows whose DocumentName no longer exists in the documents
+		table.
+
+		Parameters:
+		-----------
+		conn : sqlite3.Connection
+			Open SQLite connection.
+
+		Returns:
+		--------
+		int
+			Deleted row count.
+	"""
+	try:
+		cur = conn.execute(
+			"""
+            DELETE
+            FROM document_chunks
+            WHERE DocumentName NOT IN
+                  (SELECT Name
+                   FROM documents);
+			"""
+		)
+		
+		return int( cur.rowcount if cur.rowcount is not None else 0 )
+	except Exception:
+		return 0
+
+def purge_orphaned_document_embeddings( conn: sqlite3.Connection ) -> int:
+	"""
+		Purpose:
+		--------
+		Delete document embedding metadata rows whose DocumentName no longer exists in
+		the documents table.
+
+		Parameters:
+		-----------
+		conn : sqlite3.Connection
+			Open SQLite connection.
+
+		Returns:
+		--------
+		int
+			Deleted row count.
+	"""
+	try:
+		cur = conn.execute(
+			"""
+            DELETE
+            FROM document_embeddings
+            WHERE DocumentName NOT IN
+                  (SELECT Name
+                   FROM documents);
+			"""
+		)
+		
+		return int( cur.rowcount if cur.rowcount is not None else 0 )
+	except Exception:
+		return 0
+
+def purge_orphaned_ai_assets( ) -> Dict[ str, int ]:
+	"""
+		Purpose:
+		--------
+		Delete orphaned AI asset rows that depend on the governed documents table.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		Dict[str, int]
+			Dictionary containing deleted chunk and embedding row counts.
+	"""
+	result: Dict[ str, int ] = {
+			'deleted_chunks': 0,
+			'deleted_embeddings': 0
+	}
+	
+	tables = list_tables( )
+	
+	if 'documents' not in tables:
+		return result
+	
+	with create_connection( ) as conn:
+		if 'document_chunks' in tables:
+			result[ 'deleted_chunks' ] = purge_orphaned_document_chunks( conn )
+		
+		if 'document_embeddings' in tables:
+			result[ 'deleted_embeddings' ] = purge_orphaned_document_embeddings( conn )
+		
+		conn.commit( )
+	
+	return result
 
 def get_timestamp_text( ) -> str:
 	"""
@@ -2499,34 +5298,58 @@ def register_upload_images( uploaded_files: List[ Any ] ) -> Dict[ str, int ]:
 # -------------- LLM  UTILITIES -------------------
 
 @st.cache_resource
-def load_llm( ctx: int, threads: int ) -> Any | None:
+def load_llm( model_path: str, ctx: int, threads: int, seed: int ) -> Any | None:
 	"""
 		Purpose:
 		--------
-		Lazily load the local llama.cpp model using the supplied runtime settings.
+		Lazily load the selected local llama.cpp GGUF model using the supplied runtime
+		settings. The model path is part of the cache key so switching models creates a
+		distinct cached model resource.
 
 		Parameters:
 		-----------
+		model_path : str
+			Local GGUF model path.
+
 		ctx : int
 			Context window size.
+
 		threads : int
 			CPU thread count.
+
+		seed : int
+			Random seed used by llama.cpp.
 
 		Returns:
 		--------
 		Any | None
+			Loaded llama.cpp model instance when available; otherwise None.
 	"""
 	try:
-		if not local_model_available( ):
+		if Llama is None:
 			return None
 		
-		from llama_cpp import Llama
+		model_path_value = str( model_path or '' ).strip( )
+		
+		if not model_path_value:
+			return None
+		
+		if not Path( model_path_value ).exists( ):
+			return None
 		
 		ctx_value = int( ctx ) if int( ctx ) > 0 else int( cfg.DEFAULT_CTX )
 		thread_value = int( threads ) if int( threads ) > 0 else int( cfg.CORES )
+		seed_value = int( seed ) if seed is not None else -1
 		
-		return Llama( model_path=str( cfg.MODEL_PATH ), n_ctx=ctx_value, n_threads=thread_value,
-			n_batch=512, verbose=False )
+		return Llama(
+			model_path=model_path_value,
+			n_ctx=ctx_value,
+			n_threads=thread_value,
+			n_batch=512,
+			seed=seed_value,
+			verbose=False
+		)
+	
 	except Exception:
 		return None
 
@@ -2629,104 +5452,95 @@ def build_instruction_block( ) -> str:
 	
 	return '\n'.join( lines ).strip( )
 
-def extract_text_bytes( file_bytes: bytes, file_name: str='' ) -> str:
+def extract_text_from_pdf_bytes( file_bytes: bytes, include_page_markers: bool = False ) -> str:
 	"""
 		Purpose:
 		--------
-		Extract text from PDF or text-based documents using the current document parsing settings.
+		Extract native text from PDF bytes using PyMuPDF when it is available.
 
 		Parameters:
 		-----------
 		file_bytes : bytes
-		file_name : str
+			PDF file bytes.
+
+		include_page_markers : bool
+			When True, include page markers before each extracted page.
 
 		Returns:
 		--------
 		str
+			Extracted PDF text.
 	"""
 	if not file_bytes:
 		return ''
 	
 	if fitz is None:
-		st.warning( 'PyMuPDF is not installed. PDF text extraction is unavailable.' )
-	return ''
-	
-	file_name_value = str( file_name or '' ).lower( )
-	include_page_markers = bool( st.session_state.get( 'include_page_markers', False ) )
-	prefer_native_pdf_text = bool( st.session_state.get( 'prefer_native_pdf_text', True ) )
-	try:
-		if file_name_value.endswith( '.pdf' ) or file_name_value == '':
-			if prefer_native_pdf_text:
-				doc = fitz.open( stream=file_bytes, filetype='pdf' )
-				parts: List[ str ] = [ ]
-				page_index = 0
-				for page in doc:
-					page_index += 1
-					page_text = page.get_text( 'text' ) or ''
-					if include_page_markers:
-						parts.append( f'[Page {page_index}]' )
-					parts.append( page_text )
-				return '\n'.join( parts ).strip( )
-	except Exception:
-		pass
+		return ''
 	
 	try:
-		return file_bytes.decode( errors='ignore' ).strip( )
+		doc = fitz.open( stream=file_bytes, filetype='pdf' )
+		parts: List[ str ] = [ ]
+		
+		for page_index, page in enumerate( doc, start=1 ):
+			page_text = page.get_text( 'text' ) or ''
+			
+			if include_page_markers:
+				parts.append( f'[Page {page_index}]' )
+			
+			if page_text:
+				parts.append( page_text )
+		
+		doc.close( )
+		return '\n'.join( parts ).strip( )
 	except Exception:
 		return ''
 
-def route_document_query( prompt: str ) -> str:
+def extract_text_from_docx_bytes( file_bytes: bytes ) -> str:
 	"""
 		Purpose:
 		--------
-		Route a document question or action through the unified chat pipeline.
+		Extract text from DOCX bytes using python-docx when it is available.
 
 		Parameters:
 		-----------
-		prompt : str
+		file_bytes : bytes
+			DOCX file bytes.
 
 		Returns:
 		--------
 		str
+			Extracted DOCX text.
 	"""
-	user_input = build_docqna_input( user_query=prompt,
-		k=int( st.session_state.get( 'retrieval_k', 6 ) ) )
-	
-	if not user_input:
-		user_input = (prompt or '').strip( )
-	
-	return run_llm_turn( user_input=user_input,
-		temperature=float( st.session_state.get( 'temperature', 0.0 ) ),
-		top_p=float( st.session_state.get( 'top_percent', 0.95 ) ),
-		repeat_penalty=float( st.session_state.get( 'repeat_penalty', 1.1 ) ),
-		max_tokens=int( st.session_state.get( 'max_tokens', 1024 ) ) or 1024,
-		stream=False, output=None )
+	if not file_bytes:
+		return ''
 
-def summarize_document( ) -> str:
-	"""
-		Purpose:
-		--------
-		Summarize the currently active document set using the document routing layer.
-
-		Parameters:
-		-----------
-		None
-
-		Returns:
-		--------
-		str
-	"""
-	summary_prompt = """
-		Provide a clear, structured summary of the active document set.
-		Include:
-		- Purpose
-		- Key themes
-		- Major conclusions
-		- Important data points
-		- Open questions or uncertainties
-	"""
+	if Document is None:
+		return ''
 	
-	return route_document_query( summary_prompt.strip( ) )
+	try:
+		buffer = BytesIO( file_bytes )
+		document = Document( buffer )
+		parts: List[ str ] = [ ]
+		
+		for paragraph in document.paragraphs:
+			text = str( paragraph.text or '' ).strip( )
+			if text:
+				parts.append( text )
+		
+		for table in document.tables:
+			for row in table.rows:
+				values: List[ str ] = [ ]
+				for cell in row.cells:
+					cell_text = str( cell.text or '' ).strip( )
+					values.append( cell_text )
+				
+				row_text = ' | '.join( values ).strip( )
+				if row_text:
+					parts.append( row_text )
+		
+		return '\n'.join( parts ).strip( )
+	except Exception:
+		return ''
 
 def compute_fingerprint( active_docs: List[ str ], doc_bytes: Dict[ str, bytes ] ) -> str:
 	'''
@@ -2755,7 +5569,129 @@ def compute_fingerprint( active_docs: List[ str ], doc_bytes: Dict[ str, bytes ]
 		h.update( hashlib.sha256( b ).digest( ) )
 	return h.hexdigest( )
 
-def extract_text( file_bytes: bytes, file_name: str='' ) -> str:
+def decode_text_bytes( file_bytes: bytes ) -> str:
+	"""
+		Purpose:
+		--------
+		Decode text-like document bytes using common encodings and a permissive fallback.
+
+		Parameters:
+		-----------
+		file_bytes : bytes
+			File bytes to decode.
+
+		Returns:
+		--------
+		str
+			Decoded text.
+	"""
+	if not file_bytes:
+		return ''
+	
+	encodings = [ 'utf-8', 'utf-8-sig', 'cp1252', 'latin-1' ]
+	
+	for encoding in encodings:
+		try:
+			return file_bytes.decode( encoding ).strip( )
+		except Exception:
+			continue
+	
+	try:
+		return file_bytes.decode( errors='ignore' ).strip( )
+	except Exception:
+		return ''
+
+def extract_text_from_bytes( file_bytes: bytes, file_name: str = '' ) -> str:
+	"""
+		Purpose:
+		--------
+		Extract text from supported document bytes using the file name extension and
+		current parsing preferences.
+
+		Parameters:
+		-----------
+		file_bytes : bytes
+			Source document bytes.
+
+		file_name : str
+			Source document name.
+
+		Returns:
+		--------
+		str
+			Extracted text.
+	"""
+	if not file_bytes:
+		return ''
+	
+	file_name_value = str( file_name or '' ).lower( ).strip( )
+	include_page_markers = bool( st.session_state.get( 'include_page_markers', False ) )
+	prefer_native_pdf_text = bool( st.session_state.get( 'prefer_native_pdf_text', True ) )
+	
+	if file_name_value.endswith( '.pdf' ):
+		if prefer_native_pdf_text:
+			text = extract_text_from_pdf_bytes(
+				file_bytes=file_bytes,
+				include_page_markers=include_page_markers
+			)
+			
+			if text:
+				return text
+		
+		return decode_text_bytes( file_bytes )
+	
+	if file_name_value.endswith( '.docx' ):
+		text = extract_text_from_docx_bytes( file_bytes )
+		
+		if text:
+			return text
+		
+		return decode_text_bytes( file_bytes )
+	
+	if (
+			file_name_value.endswith( '.txt' )
+			or file_name_value.endswith( '.md' )
+			or file_name_value.endswith( '.csv' )
+			or file_name_value.endswith( '.json' )
+			or file_name_value.endswith( '.xml' )
+			or file_name_value.endswith( '.html' )
+			or file_name_value.endswith( '.htm' )
+	):
+		return decode_text_bytes( file_bytes )
+	
+	if not file_name_value:
+		pdf_text = extract_text_from_pdf_bytes(
+			file_bytes=file_bytes,
+			include_page_markers=include_page_markers
+		)
+		
+		if pdf_text:
+			return pdf_text
+	
+	return decode_text_bytes( file_bytes )
+
+def extract_text_bytes( file_bytes: bytes, file_name: str = '' ) -> str:
+	"""
+		Purpose:
+		--------
+		Backward-compatible wrapper for extracting text from document bytes.
+
+		Parameters:
+		-----------
+		file_bytes : bytes
+			Source document bytes.
+
+		file_name : str
+			Source document name.
+
+		Returns:
+		--------
+		str
+			Extracted text.
+	"""
+	return extract_text_from_bytes( file_bytes=file_bytes, file_name=file_name )
+
+def extract_text( file_bytes: bytes, file_name: str = '' ) -> str:
 	"""
 		Purpose:
 		--------
@@ -2764,11 +5700,15 @@ def extract_text( file_bytes: bytes, file_name: str='' ) -> str:
 		Parameters:
 		-----------
 		file_bytes : bytes
+			Source document bytes.
+
 		file_name : str
+			Source document name.
 
 		Returns:
 		--------
 		str
+			Extracted text.
 	"""
 	return extract_text_from_bytes( file_bytes=file_bytes, file_name=file_name )
 
@@ -2888,20 +5828,97 @@ def get_docqna_names( ) -> str:
 		return 'No active documents'
 	return ', '.join( [ str( name ) for name in active_docs ] )
 
+def is_embedder_available( candidate: Any | None = None ) -> bool:
+	"""
+		Purpose:
+		--------
+		Determine whether a sentence embedding model is available and usable.
+
+		Parameters:
+		-----------
+		candidate : Any | None
+			Optional embedding model instance. When omitted, the global embedder is used.
+
+		Returns:
+		--------
+		bool
+			True when an embedder with an encode method is available; otherwise False.
+	"""
+	model = candidate if candidate is not None else globals( ).get( 'embedder', None )
+	return model is not None and hasattr( model, 'encode' )
+
+def get_embedder_unavailable_message( ) -> str:
+	"""
+		Purpose:
+		--------
+		Return a standard diagnostic message when sentence-transformer embeddings are
+		unavailable.
+
+		Parameters:
+		-----------
+		None
+
+		Returns:
+		--------
+		str
+			Diagnostic message.
+	"""
+	return (
+			'Embedding retrieval is unavailable because the sentence-transformer model '
+			'could not be loaded. Install or repair `sentence-transformers`, then restart '
+			'the Streamlit app.'
+	)
+
+def decode_embedding_vector( vector_blob: bytes | memoryview | None ) -> np.ndarray:
+	"""
+		Purpose:
+		--------
+		Decode a stored embedding vector BLOB into a NumPy float32 array.
+
+		Parameters:
+		-----------
+		vector_blob : bytes | memoryview | None
+			Stored vector BLOB.
+
+		Returns:
+		--------
+		np.ndarray
+			Decoded vector. Empty array when decoding fails.
+	"""
+	if not vector_blob:
+		return np.asarray( [ ], dtype=np.float32 )
+	
+	try:
+		return np.frombuffer( vector_blob, dtype=np.float32 )
+	except Exception:
+		return np.asarray( [ ], dtype=np.float32 )
+
 def rebuild_index( embedder: Any | None ) -> None:
 	"""
 		Purpose:
 		--------
-		Build or refresh the Document Q&A vector index when active documents or chunk settings change.
+		Build or refresh the Document Q&A vector index when active documents or chunk
+		settings change. The function fails closed when embeddings are unavailable instead
+		of raising an AttributeError from embedder.encode(...).
 
 		Parameters:
 		-----------
-		embedder : SentenceTransformer
+		embedder : Any | None
+			Sentence embedding model instance.
 
 		Returns:
 		--------
 		None
 	"""
+	if not is_embedder_available( embedder ):
+		st.session_state[ 'docqna_vec_ready' ] = False
+		st.session_state[ 'docqna_fallback_rows' ] = [ ]
+		st.session_state[ 'docqna_chunk_count' ] = 0
+		st.session_state[ 'docqna_last_retrieval' ] = [ ]
+		st.session_state[ 'docqna_inventory_rows' ] = build_docqna_inventory( )
+		st.session_state[ 'docqna_retrieval_status' ] = get_embedder_unavailable_message( )
+		return
+	
 	active_docs: List[ str ] = st.session_state.get( 'active_docs', [ ] )
 	doc_bytes: Dict[ str, bytes ] = st.session_state.get( 'doc_bytes', { } )
 	retrieval_chunk_size = int( st.session_state.get( 'retrieval_chunk_size', 1200 ) )
@@ -2919,12 +5936,17 @@ def rebuild_index( embedder: Any | None ) -> None:
 	st.session_state[ 'docqna_chunk_count' ] = 0
 	st.session_state[ 'docqna_fallback_rows' ] = [ ]
 	st.session_state[ 'docqna_inventory_rows' ] = build_docqna_inventory( )
+	st.session_state[ 'docqna_retrieval_status' ] = ''
 	
-	dim_value = getattr( embedder, 'get_sentence_embedding_dimension', lambda: 384 )( )
-	dim = int( dim_value ) if dim_value else 384
+	try:
+		dim_value = getattr( embedder, 'get_sentence_embedding_dimension', lambda: 384 )( )
+		dim = int( dim_value ) if dim_value else 384
+	except Exception:
+		dim = 384
 	
 	prefer_sqlite_vec = bool( st.session_state.get( 'prefer_sqlite_vec', True ) )
 	vec_ready = False
+	
 	if prefer_sqlite_vec:
 		vec_ready = ensure_schema( dim )
 	
@@ -2959,11 +5981,18 @@ def rebuild_index( embedder: Any | None ) -> None:
 				size=retrieval_chunk_size,
 				overlap=retrieval_chunk_overlap
 			)
+			
 			if not chunks:
 				continue
 			
-			vecs = embedder.encode( chunks, show_progress_bar=False )
-			vecs = np.asarray( vecs, dtype=np.float32 )
+			try:
+				vecs = embedder.encode( chunks, show_progress_bar=False )
+				vecs = np.asarray( vecs, dtype=np.float32 )
+			except Exception as e:
+				st.session_state[ 'docqna_retrieval_status' ] = (
+						f'Embedding generation failed for {name}: {e}'
+				)
+				continue
 			
 			if vec_ready:
 				for chunk_text_value, v in zip( chunks, vecs ):
@@ -2985,39 +6014,57 @@ def rebuild_index( embedder: Any | None ) -> None:
 		else:
 			st.session_state[ 'docqna_fallback_rows' ] = [ ]
 	
-	except Exception:
+	except Exception as e:
 		st.session_state[ 'docqna_vec_ready' ] = False
 		st.session_state[ 'docqna_fallback_rows' ] = [ ]
 		st.session_state[ 'docqna_chunk_count' ] = 0
+		st.session_state[ 'docqna_retrieval_status' ] = f'Document index rebuild failed: {e}'
+	
 	finally:
 		conn.close( )
 
-def retrieve_chunks( query: str, k: int=None ) -> List[ Tuple[ str, str, float ] ]:
+def retrieve_chunks( query: str, k: int = None ) -> List[ Tuple[ str, str, float ] ]:
 	"""
 		Purpose:
 		--------
 		Retrieve top-k document chunks relevant to the query using sqlite-vec when available,
-		with optional cosine-similarity fallback.
+		with optional cosine-similarity fallback. Missing embeddings fail safely.
 
 		Parameters:
 		-----------
 		query : str
+			User query.
+
 		k : int | None
+			Number of chunks to retrieve.
 
 		Returns:
 		--------
 		List[Tuple[str, str, float]]
+			Ranked retrieval results as document name, chunk text, and score or distance.
 	"""
 	if not query or not query.strip( ):
 		return [ ]
 	
+	if not is_embedder_available( globals( ).get( 'embedder', None ) ):
+		st.session_state[ 'docqna_last_retrieval' ] = [ ]
+		st.session_state[ 'docqna_retrieval_status' ] = get_embedder_unavailable_message( )
+		return [ ]
+	
 	rebuild_index( embedder )
+	
 	k_value = int( k ) if k is not None else int( st.session_state.get( 'retrieval_k', 6 ) )
 	if k_value <= 0:
 		k_value = 6
 	
-	qv = embedder.encode( [ query ], show_progress_bar=False )
-	qv = np.asarray( qv, dtype=np.float32 )[ 0 ]
+	try:
+		qv = embedder.encode( [ query ], show_progress_bar=False )
+		qv = np.asarray( qv, dtype=np.float32 )[ 0 ]
+	except Exception as e:
+		st.session_state[ 'docqna_last_retrieval' ] = [ ]
+		st.session_state[ 'docqna_retrieval_status' ] = f'Query embedding failed: {e}'
+		return [ ]
+	
 	if bool( st.session_state.get( 'docqna_vec_ready', False ) ):
 		conn = create_connection( )
 		try:
@@ -3030,24 +6077,36 @@ def retrieve_chunks( query: str, k: int=None ) -> List[ Tuple[ str, str, float ]
                 WHERE embedding MATCH ?
                 ORDER BY distance ASC LIMIT ?;
 				''',
-				(qv.tobytes( ), int( k_value )) )
+				(qv.tobytes( ), int( k_value ))
+			)
 			rows = cur.fetchall( )
-			return [ (r[ 0 ], r[ 1 ], float( r[ 2 ] )) for r in rows ]
-		except Exception:
+			results = [ (r[ 0 ], r[ 1 ], float( r[ 2 ] )) for r in rows ]
+			st.session_state[ 'docqna_last_retrieval' ] = results
+			return results
+		
+		except Exception as e:
 			st.session_state[ 'docqna_vec_ready' ] = False
+			st.session_state[ 'docqna_retrieval_status' ] = (
+					f'sqlite-vec retrieval failed; using fallback when enabled. Error: {e}'
+			)
+		
 		finally:
 			conn.close( )
 	
 	if not bool( st.session_state.get( 'allow_similarity_fallback', True ) ):
+		st.session_state[ 'docqna_last_retrieval' ] = [ ]
 		return [ ]
 	
-	fallback_rows: List[ Tuple[ str, str, bytes ] ] = st.session_state.get( 'docqna_fallback_rows', [ ] )
+	fallback_rows: List[ Tuple[ str, str, bytes ] ] = st.session_state.get(
+		'docqna_fallback_rows',
+		[ ]
+	)
+	
 	results: List[ Tuple[ str, str, float ] ] = [ ]
+	
 	for doc_name, chunk_text_value, vec_blob in fallback_rows:
-		if not vec_blob:
-			continue
+		v = decode_embedding_vector( vec_blob )
 		
-		v = np.frombuffer( vec_blob, dtype=np.float32 )
 		if v.size == 0:
 			continue
 		
@@ -3055,27 +6114,36 @@ def retrieve_chunks( query: str, k: int=None ) -> List[ Tuple[ str, str, float ]
 		results.append( (doc_name, chunk_text_value, float( score )) )
 	
 	results.sort( key=lambda r: r[ 2 ], reverse=True )
-	return results[ : int( k_value ) ]
+	results = results[ : int( k_value ) ]
+	st.session_state[ 'docqna_last_retrieval' ] = results
+	return results
 
-def build_docqna_input( user_query: str, k: int=None ) -> str:
+def build_docqna_input( user_query: str, k: int = None ) -> str:
 	"""
 		Purpose:
 		--------
-		Build a document-grounded prompt using retrieved excerpts and the current document action.
+		Build a document-grounded prompt using retrieved excerpts and the current document
+		action. Missing retrieval returns a safe prompt rather than failing.
 
 		Parameters:
 		-----------
 		user_query : str
+			User request.
+
 		k : int | None
+			Number of chunks to retrieve.
 
 		Returns:
 		--------
 		str
+			Document-grounded LLM prompt.
 	"""
 	doc_instruction_block = build_instruction_block( )
 	hits = retrieve_chunks( user_query, k=k )
 	st.session_state[ 'docqna_last_retrieval' ] = hits
+	
 	context_blocks: List[ str ] = [ ]
+	
 	for doc_name, chunk, score in hits:
 		context_blocks.append( f'[Document: {doc_name}]\n{chunk}'.strip( ) )
 	
@@ -3087,7 +6155,10 @@ def build_docqna_input( user_query: str, k: int=None ) -> str:
 	
 	context = '\n\n'.join( context_blocks ).strip( )
 	active_doc_names = get_docqna_names( )
+	retrieval_status = str( st.session_state.get( 'docqna_retrieval_status', '' ) or '' ).strip( )
+	
 	prompt_parts: List[ str ] = [ ]
+	
 	if doc_instruction_block:
 		prompt_parts.append( doc_instruction_block )
 	
@@ -3096,21 +6167,31 @@ def build_docqna_input( user_query: str, k: int=None ) -> str:
 	if context:
 		prompt_parts.append(
 			'Use the following retrieved document excerpts as the evidence base for your answer.\n\n'
-			f'{context}' )
+			f'{context}'
+		)
 	else:
-		prompt_parts.append(
-			'No retrieved document excerpts were available for this question.' )
+		if retrieval_status:
+			prompt_parts.append(
+				'No retrieved document excerpts were available.\n\n'
+				f'Retrieval Status: {retrieval_status}'
+			)
+		else:
+			prompt_parts.append(
+				'No retrieved document excerpts were available for this question.'
+			)
 	
 	prompt_parts.append( f'User Request:\n{user_query}\n\nAnswer:' )
 	return '\n\n'.join( prompt_parts ).strip( )
 
-# ------------ SEMANTIC SEARCH UTLITIES -------------------
+# ------------- SEMANTIC SEARCH UTILITIES ----------------------
 
 def decode_embedding_rows( ) -> List[ Tuple[ str, np.ndarray ] ]:
 	"""
 		Purpose:
 		--------
-		Read and decode rows from the semantic embeddings table.
+		Read and decode rows from the semantic embeddings table. Database failures,
+		missing tables, corrupt blobs, and empty vectors fail closed so Semantic Search
+		and Text Generation context reuse cannot crash.
 
 		Parameters:
 		-----------
@@ -3119,21 +6200,31 @@ def decode_embedding_rows( ) -> List[ Tuple[ str, np.ndarray ] ]:
 		Returns:
 		--------
 		List[Tuple[str, np.ndarray]]
+			Decoded chunk/vector rows.
 	"""
 	rows_out: List[ Tuple[ str, np.ndarray ] ] = [ ]
 	
-	with sqlite3.connect( cfg.DB_PATH ) as conn:
-		rows = conn.execute( 'SELECT chunk, vector FROM embeddings' ).fetchall( )
+	try:
+		initialize_database( )
+		
+		with sqlite3.connect( cfg.DB_PATH, timeout=30 ) as conn:
+			rows = conn.execute( 'SELECT chunk, vector FROM embeddings' ).fetchall( )
+	except Exception as e:
+		st.session_state[ 'semantic_status' ] = (
+				f'Semantic index could not be read: {e}')
+		return rows_out
 	
 	for chunk_text_value, vector_blob in rows:
-		if not vector_blob:
+		try:
+			chunk = str( chunk_text_value or '' )
+			vec = decode_embedding_vector( vector_blob )
+			
+			if not chunk or vec.size == 0:
+				continue
+			
+			rows_out.append( (chunk, vec) )
+		except Exception:
 			continue
-		
-		vec = np.frombuffer( vector_blob, dtype=np.float32 )
-		if vec.size == 0:
-			continue
-		
-		rows_out.append( (str( chunk_text_value or '' ), vec) )
 	
 	return rows_out
 
@@ -3141,7 +6232,8 @@ def clear_semantic_index( ) -> None:
 	"""
 		Purpose:
 		--------
-		Clear the semantic embeddings table and reset Semantic Search diagnostics.
+		Clear the semantic embeddings table and reset Semantic Search diagnostics without
+		raising hard database errors into the Streamlit UI execution path.
 
 		Parameters:
 		-----------
@@ -3151,51 +6243,85 @@ def clear_semantic_index( ) -> None:
 		--------
 		None
 	"""
-	with sqlite3.connect( cfg.DB_PATH ) as conn:
-		conn.execute( 'DELETE FROM embeddings' )
-		conn.commit( )
-	
-	st.session_state[ 'semantic_result_rows' ] = [ ]
-	st.session_state[ 'semantic_selected_rows' ] = [ ]
-	st.session_state[ 'semantic_index_chunk_count' ] = 0
-	st.session_state[ 'semantic_index_dim' ] = 0
-	st.session_state[ 'semantic_index_doc_count' ] = 0
-	st.session_state[ 'semantic_uploaded_names' ] = [ ]
-	st.session_state[ 'semantic_last_query' ] = ''
+	try:
+		initialize_database( )
+		
+		with sqlite3.connect( cfg.DB_PATH, timeout=30 ) as conn:
+			conn.execute( 'DELETE FROM embeddings' )
+			conn.commit( )
+		
+		st.session_state[ 'semantic_result_rows' ] = [ ]
+		st.session_state[ 'semantic_selected_rows' ] = [ ]
+		st.session_state[ 'semantic_index_chunk_count' ] = 0
+		st.session_state[ 'semantic_index_dim' ] = 0
+		st.session_state[ 'semantic_index_doc_count' ] = 0
+		st.session_state[ 'semantic_uploaded_names' ] = [ ]
+		st.session_state[ 'semantic_last_query' ] = ''
+		st.session_state[ 'semantic_status' ] = 'Semantic index deleted.'
+	except Exception as e:
+		st.session_state[ 'semantic_status' ] = (
+				f'Semantic index could not be deleted: {e}')
 
 def build_semantic_index( uploaded_files: List[ Any ] ) -> Dict[ str, Any ]:
 	"""
 		Purpose:
 		--------
-		Build or append a semantic chunk index from uploaded files.
+		Build or append a semantic chunk index from uploaded files. The function preserves
+		the existing embeddings table contract while guarding extraction, embedding, vector
+		shape, and SQLite write failures.
 
 		Parameters:
 		-----------
 		uploaded_files : List[Any]
+			Uploaded files from Streamlit.
 
 		Returns:
 		--------
 		Dict[str, Any]
+			Index build result.
 	"""
-	if embedder is None:
+	global embedder
+	
+	if not is_embedder_available( globals( ).get( 'embedder', None ) ):
+		message = get_embedder_unavailable_message( )
+		st.session_state[ 'semantic_status' ] = message
+		
 		return {
 				'success': False,
-				'message': 'Embedding model unavailable.',
+				'message': message,
 				'doc_count': 0,
 				'chunk_count': 0,
 				'vector_dim': 0
 		}
 	
-	chunk_size = int( st.session_state.get( 'semantic_chunk_size', 1200 ) )
-	chunk_overlap = int( st.session_state.get( 'semantic_chunk_overlap', 200 ) )
+	if not isinstance( uploaded_files, list ) or len( uploaded_files ) == 0:
+		message = 'No files were provided for semantic indexing.'
+		st.session_state[ 'semantic_status' ] = message
+		
+		return {
+				'success': False,
+				'message': message,
+				'doc_count': 0,
+				'chunk_count': 0,
+				'vector_dim': 0
+		}
+	
+	try:
+		chunk_size = int( st.session_state.get( 'semantic_chunk_size', 1200 ) )
+		chunk_overlap = int( st.session_state.get( 'semantic_chunk_overlap', 200 ) )
+	except Exception:
+		chunk_size = 1200
+		chunk_overlap = 200
+	
 	clear_existing = bool( st.session_state.get( 'semantic_clear_existing', True ) )
 	append_existing = bool( st.session_state.get( 'semantic_append_existing', False ) )
 	
-	if clear_existing and not append_existing:
-		clear_semantic_index( )
+	if append_existing:
+		clear_existing = False
 	
 	all_chunks: List[ str ] = [ ]
 	doc_names: List[ str ] = [ ]
+	
 	for f in uploaded_files:
 		try:
 			file_name = str( getattr( f, 'name', '' ) or '' ).strip( )
@@ -3206,7 +6332,11 @@ def build_semantic_index( uploaded_files: List[ Any ] ) -> Dict[ str, Any ]:
 		if not file_name or not file_bytes:
 			continue
 		
-		text = extract_text( file_bytes=file_bytes, file_name=file_name )
+		try:
+			text = extract_text( file_bytes=file_bytes, file_name=file_name )
+		except Exception:
+			text = ''
+		
 		if not text:
 			try:
 				text = file_bytes.decode( errors='ignore' )
@@ -3216,37 +6346,96 @@ def build_semantic_index( uploaded_files: List[ Any ] ) -> Dict[ str, Any ]:
 		if not text:
 			continue
 		
-		chunks = chunk_text( text=text, size=chunk_size, overlap=chunk_overlap )
+		try:
+			chunks = chunk_text( text=text, size=chunk_size, overlap=chunk_overlap )
+		except Exception:
+			chunks = [ ]
+		
 		if not chunks:
 			continue
 		
-		all_chunks.extend( chunks )
+		all_chunks.extend( [ str( chunk ) for chunk in chunks if chunk ] )
 		doc_names.append( file_name )
 	
 	if len( all_chunks ) == 0:
+		message = 'No extractable text was found in the uploaded files.'
+		st.session_state[ 'semantic_status' ] = message
+		
 		return {
 				'success': False,
-				'message': 'No extractable text was found in the uploaded files.',
+				'message': message,
 				'doc_count': 0,
 				'chunk_count': 0,
 				'vector_dim': 0
 		}
 	
-	vecs = embedder.encode( all_chunks, show_progress_bar=False )
-	vecs = np.asarray( vecs, dtype=np.float32 )
-	with sqlite3.connect( cfg.DB_PATH ) as conn:
-		for chunk_text_value, vec in zip( all_chunks, vecs ):
-			conn.execute(
-				'INSERT INTO embeddings (chunk, vector) VALUES (?, ?)',
-				(chunk_text_value, vec.tobytes( ))
-			)
-		conn.commit( )
+	try:
+		vecs = embedder.encode( all_chunks, show_progress_bar=False )
+		vecs = np.asarray( vecs, dtype=np.float32 )
+		
+		if len( vecs.shape ) != 2 or vecs.shape[ 0 ] != len( all_chunks ):
+			message = (
+					'Semantic embedding generation returned an unexpected vector shape.')
+			st.session_state[ 'semantic_status' ] = message
+			
+			return {
+					'success': False,
+					'message': message,
+					'doc_count': len( doc_names ),
+					'chunk_count': len( all_chunks ),
+					'vector_dim': 0
+			}
+	except Exception as e:
+		message = f'Semantic embedding generation failed: {e}'
+		st.session_state[ 'semantic_status' ] = message
+		
+		return {
+				'success': False,
+				'message': message,
+				'doc_count': len( doc_names ),
+				'chunk_count': len( all_chunks ),
+				'vector_dim': 0
+		}
+	
+	try:
+		initialize_database( )
+		
+		with sqlite3.connect( cfg.DB_PATH, timeout=30 ) as conn:
+			if clear_existing:
+				conn.execute( 'DELETE FROM embeddings' )
+			
+			for chunk_text_value, vec in zip( all_chunks, vecs ):
+				vec = np.asarray( vec, dtype=np.float32 ).reshape( -1 )
+				
+				if vec.size == 0:
+					continue
+				
+				conn.execute(
+					'INSERT INTO embeddings (chunk, vector) VALUES (?, ?)',
+					(chunk_text_value, vec.tobytes( ))
+				)
+			
+			conn.commit( )
+	except Exception as e:
+		message = f'Semantic index database write failed: {e}'
+		st.session_state[ 'semantic_status' ] = message
+		
+		return {
+				'success': False,
+				'message': message,
+				'doc_count': len( doc_names ),
+				'chunk_count': len( all_chunks ),
+				'vector_dim': int( vecs.shape[ 1 ] ) if len( vecs.shape ) == 2 else 0
+		}
 	
 	vector_dim = int( vecs.shape[ 1 ] ) if len( vecs.shape ) == 2 else 0
 	st.session_state[ 'semantic_uploaded_names' ] = doc_names
 	st.session_state[ 'semantic_index_doc_count' ] = len( doc_names )
 	st.session_state[ 'semantic_index_chunk_count' ] = len( all_chunks )
 	st.session_state[ 'semantic_index_dim' ] = vector_dim
+	st.session_state[ 'semantic_result_rows' ] = [ ]
+	st.session_state[ 'semantic_selected_rows' ] = [ ]
+	st.session_state[ 'semantic_status' ] = 'Semantic index built successfully.'
 	
 	return {
 			'success': True,
@@ -3260,48 +6449,107 @@ def query_semantic_index( query_text: str ) -> List[ Dict[ str, Any ] ]:
 	"""
 		Purpose:
 		--------
-		Query the semantic index and return ranked chunk results.
+		Query the semantic index and return ranked chunk results. Missing embeddings,
+		database failures, empty indexes, malformed vectors, and vector dimension mismatches
+		fail closed instead of raising hard runtime errors.
 
 		Parameters:
 		-----------
 		query_text : str
+			Query text.
 
 		Returns:
 		--------
 		List[Dict[str, Any]]
+			Ranked semantic result rows.
 	"""
-	if not query_text or not query_text.strip( ):
+	global embedder
+	
+	if not query_text or not str( query_text ).strip( ):
+		st.session_state[ 'semantic_result_rows' ] = [ ]
+		st.session_state[ 'semantic_status' ] = 'Enter a semantic query before searching.'
 		return [ ]
 	
-	if embedder is None:
+	if not is_embedder_available( globals( ).get( 'embedder', None ) ):
+		st.session_state[ 'semantic_result_rows' ] = [ ]
+		st.session_state[ 'semantic_status' ] = get_embedder_unavailable_message( )
 		return [ ]
 	
-	top_k = int( st.session_state.get( 'semantic_top_k', 8 ) )
-	min_similarity = float( st.session_state.get( 'semantic_min_similarity', 0.0 ) )
+	try:
+		top_k = int( st.session_state.get( 'semantic_top_k', 8 ) )
+	except Exception:
+		top_k = 8
+	
+	try:
+		min_similarity = float( st.session_state.get( 'semantic_min_similarity', 0.0 ) )
+	except Exception:
+		min_similarity = 0.0
+	
 	rows = decode_embedding_rows( )
 	if not rows:
+		st.session_state[ 'semantic_result_rows' ] = [ ]
+		if not st.session_state.get( 'semantic_status', '' ):
+			st.session_state[ 'semantic_status' ] = 'Semantic index is empty.'
 		return [ ]
 	
-	q = embedder.encode( [ query_text.strip( ) ], show_progress_bar=False )[ 0 ]
-	q = np.asarray( q, dtype=np.float32 )
+	try:
+		q = embedder.encode( [ str( query_text ).strip( ) ], show_progress_bar=False )[ 0 ]
+		q = np.asarray( q, dtype=np.float32 ).reshape( -1 )
+	except Exception as e:
+		st.session_state[ 'semantic_result_rows' ] = [ ]
+		st.session_state[ 'semantic_status' ] = f'Semantic query embedding failed: {e}'
+		return [ ]
+	
+	if q.size == 0:
+		st.session_state[ 'semantic_result_rows' ] = [ ]
+		st.session_state[ 'semantic_status' ] = (
+				'Semantic query embedding returned an empty vector.')
+		return [ ]
+	
 	scored_rows: List[ Dict[ str, Any ] ] = [ ]
+	skipped_rows = 0
+	
 	for idx, (chunk_text_value, vec) in enumerate( rows, start=1 ):
-		score = cosine_similarity( q, vec )
+		try:
+			vec = np.asarray( vec, dtype=np.float32 ).reshape( -1 )
+			
+			if vec.size == 0 or vec.size != q.size:
+				skipped_rows += 1
+				continue
+			
+			score = cosine_similarity( q, vec )
+		except Exception:
+			skipped_rows += 1
+			continue
+		
 		if score < min_similarity:
 			continue
 		
-		scored_rows.append( {
+		scored_rows.append(
+			{
 					'Selected': False,
 					'Rank': idx,
 					'Score': float( score ),
-					'Chunk': chunk_text_value,
-					'Length': len( chunk_text_value )
-			} )
+					'Chunk': str( chunk_text_value or '' ),
+					'Length': len( str( chunk_text_value or '' ) )
+			}
+		)
 	
 	scored_rows.sort( key=lambda r: r[ 'Score' ], reverse=True )
 	scored_rows = scored_rows[ :top_k ]
-	st.session_state[ 'semantic_last_query' ] = query_text.strip( )
+	
+	st.session_state[ 'semantic_last_query' ] = str( query_text ).strip( )
 	st.session_state[ 'semantic_result_rows' ] = scored_rows
+	
+	if scored_rows:
+		st.session_state[ 'semantic_status' ] = 'Semantic search completed.'
+	elif skipped_rows:
+		st.session_state[ 'semantic_status' ] = (
+				'No semantic matches found. Some stored vectors were skipped because '
+				'their dimensions did not match the active embedding model.')
+	else:
+		st.session_state[ 'semantic_status' ] = 'No semantic matches found.'
+	
 	return scored_rows
 
 def create_semantic_context( ) -> str:
@@ -3317,15 +6565,19 @@ def create_semantic_context( ) -> str:
 		Returns:
 		--------
 		str
+			Semantic context text.
 	"""
 	selected_rows = st.session_state.get( 'semantic_selected_rows', [ ] )
+	
 	if not isinstance( selected_rows, list ) or len( selected_rows ) == 0:
 		return ''
 	
 	context_parts: List[ str ] = [ ]
+	
 	for idx, row in enumerate( selected_rows, start=1 ):
 		chunk_text_value = str( row.get( 'Chunk', '' ) or '' ).strip( )
 		score_value = row.get( 'Score', '' )
+		
 		if not chunk_text_value:
 			continue
 		
@@ -3333,7 +6585,7 @@ def create_semantic_context( ) -> str:
 	
 	return '\n\n'.join( context_parts ).strip( )
 
-def extract_selected_rows( edited_rows: List[ Dict[ str, Any ] ] ) -> List[Dict[str, Any]]:
+def extract_selected_rows( edited_rows: Any ) -> List[ Dict[ str, Any ] ]:
 	"""
 		Purpose:
 		--------
@@ -3341,13 +6593,24 @@ def extract_selected_rows( edited_rows: List[ Dict[ str, Any ] ] ) -> List[Dict[
 
 		Parameters:
 		-----------
-		edited_rows : List[Dict[str, Any]]
+		edited_rows : Any
+			Data editor result payload.
 
 		Returns:
 		--------
 		List[Dict[str, Any]]
+			Selected rows.
 	"""
 	selected: List[ Dict[ str, Any ] ] = [ ]
+	
+	if isinstance( edited_rows, pd.DataFrame ):
+		for _, row in edited_rows.iterrows( ):
+			row_dict = row.to_dict( )
+			if bool( row_dict.get( 'Selected', False ) ):
+				selected.append( row_dict )
+		
+		return selected
+	
 	if not isinstance( edited_rows, list ):
 		return selected
 	
@@ -3372,10 +6635,12 @@ def send_text_chunks( ) -> None:
 		None
 	"""
 	context_text = create_semantic_context( )
+	
 	if not context_text:
 		return
 	
 	existing_docs = st.session_state.get( 'basic_docs', [ ] )
+	
 	if not isinstance( existing_docs, list ):
 		existing_docs = [ ]
 	
@@ -3387,7 +6652,8 @@ def send_docqna_chunks( ) -> None:
 	"""
 		Purpose:
 		--------
-		Push selected semantic chunks into the shared document context buffer used by prompts.
+		Push selected semantic chunks into the shared document context buffer used by
+		Document Q&A prompts.
 
 		Parameters:
 		-----------
@@ -3398,10 +6664,12 @@ def send_docqna_chunks( ) -> None:
 		None
 	"""
 	context_text = create_semantic_context( )
+	
 	if not context_text:
 		return
 	
 	buffer_rows = st.session_state.get( 'semantic_context_buffer', [ ] )
+	
 	if not isinstance( buffer_rows, list ):
 		buffer_rows = [ ]
 	
@@ -3423,24 +6691,118 @@ if len( st.session_state[ 'messages' ] ) == 0:
 if 'system_instructions' not in st.session_state:
 	st.session_state[ 'system_instructions' ] = ''
 
-st.set_page_config( page_title='Bro', layout='wide', page_icon=cfg.FAVICON )
-st.caption( cfg.APP_SUBTITLE )
-
 # ==============================================================================
 # SIDEBAR
 # ==============================================================================
+sidebar_model_name = str( st.session_state.get( 'selected_model_name', get_default_model_name( ) ) or
+	get_default_model_name( ) )
+
+render_selected_model_logo( sidebar_model_name, size='large' )
+
 with st.sidebar:
 	style_subheaders( )
-	st.logo( cfg.LOGO, size='large' )
 	
-	c1, c2 = st.columns( [ 0.05, 0.95] )
+	c1, c2 = st.columns( [ 0.05, 0.95 ] )
 	with c2:
-		st.text( '⚙️ Application Mode' )
-		st.markdown( cfg.BLUE_DIVIDER, unsafe_allow_html=True )
-		mode = st.radio( label='', options=cfg.MODES, index=0 )
-	
-	st.divider( )
-
+		st.divider( )
+		st.markdown( '#### ⚙️ Configuration' )
+		
+		with st.expander( 'LLM', expanded=True ):
+			model_names = get_model_names_for_state( )
+			default_model_name = get_default_model_name( )
+			
+			if default_model_name in model_names:
+				default_model_index = model_names.index( default_model_name )
+			else:
+				default_model_index = 0
+			
+			current_model_name = str(
+				st.session_state.get( 'selected_model_name', default_model_name ) or
+				default_model_name
+			)
+			
+			if current_model_name in model_names:
+				current_model_index = model_names.index( current_model_name )
+			else:
+				current_model_index = default_model_index
+			
+			st.radio( label='Select', options=model_names, index=current_model_index, key='selected_model_name',
+				on_change=on_selected_model_change )
+			
+			selected_model_name = str( st.session_state.get( 'selected_model_name',
+				default_model_name ) or default_model_name )
+			
+			selected_model_path = get_model_path_for_state( selected_model_name )
+			selected_model_spec = get_model_spec_for_state( selected_model_name )
+			selected_model_modes = get_model_modes_for_state( selected_model_name )
+			
+			st.session_state[ 'selected_model_path' ] = selected_model_path
+			st.session_state[ 'selected_model_spec' ] = selected_model_spec
+			st.session_state[ 'selected_model_modes' ] = selected_model_modes
+			
+			if isinstance( selected_model_spec, dict ):
+				model_family = str( selected_model_spec.get( 'family', '' ) or '' )
+				base_model = str( selected_model_spec.get( 'base_model', '' ) or '' )
+				model_size = str( selected_model_spec.get( 'size', '' ) or '' )
+				model_description = str( selected_model_spec.get( 'description', '' ) or '' )
+			else:
+				model_family = ''
+				model_size = ''
+				model_description = ''
+			
+			if model_family or model_size:
+				st.caption( f'Model Family: '
+				            f'{model_family}'.strip( ) )
+				st.caption( f'Base Model: '
+				            f'{base_model}'.strip( ) )
+				st.caption(f'Parameters: '
+				           f'{model_size}'.strip( ) )
+			
+			if model_description:
+				st.caption( model_description )
+			
+			if selected_model_path:
+				if Path( selected_model_path ).exists( ):
+					st.caption( 'Model File: Available' )
+				else:
+					st.caption( 'Model File: Missing' )
+			else:
+				st.caption( 'Model File: Not Configured' )
+		
+		with st.expander( 'Mode', expanded=False ):
+			selected_model_name = str( st.session_state.get( 'selected_model_name',
+				get_default_model_name( ) ) or get_default_model_name( ) )
+			
+			model_modes = get_model_modes_for_state( selected_model_name )
+			
+			pending_selected_mode = st.session_state.pop( 'pending_selected_mode', None )
+			
+			if pending_selected_mode and pending_selected_mode in model_modes:
+				st.session_state[ 'selected_mode' ] = pending_selected_mode
+				st.session_state[ 'mode' ] = pending_selected_mode
+			
+			current_mode = str( st.session_state.get( 'selected_mode',
+				get_default_mode_name( selected_model_name ) ) or
+			                    get_default_mode_name( selected_model_name ) )
+			
+			if current_mode not in model_modes:
+				current_mode = model_modes[ 0 ] if model_modes else get_default_mode_name( selected_model_name )
+				
+				st.session_state[ 'selected_mode' ] = current_mode
+				st.session_state[ 'mode' ] = current_mode
+			
+			current_mode_index = ( model_modes.index(
+				current_mode ) if current_mode in model_modes else 0 )
+			
+			st.radio( label='Select', options=model_modes, index=current_mode_index, key='selected_mode',
+				on_change=on_selected_mode_change )
+			
+			mode = str( st.session_state.get( 'selected_mode',
+					get_default_mode_name( selected_model_name ) )
+			            or get_default_mode_name( selected_model_name ) )
+			
+			st.session_state[ 'mode' ] = mode
+			
 # ==============================================================================
 # TEXT GENERATION MODE
 # ==============================================================================
@@ -3461,19 +6823,112 @@ if mode == 'Text Generation':
 	with center:
 		st.subheader( '💬 Text Generation', help=cfg.TEXT_GENERATION )
 		st.divider( )
-	
+		
 		# ------------------------------------------------------------------
 		# Expander — Mind Controls
 		# ------------------------------------------------------------------
 		with st.expander( label='Mind Controls', icon='🧠', expanded=False ):
+			# ------------------------------------------------------------------
+			# Text Generation reset request processing.
+			#
+			# Important:
+			# ---------
+			# Widget-owned keys must be reset before their widgets are
+			# instantiated in this script pass. Buttons below only set the pending
+			# request key. The actual reset is processed here at the top of this
+			# expander before any controls are created.
+			# ------------------------------------------------------------------
+			text_reset_defaults: Dict[ str, Dict[ str, Any ] ] = {
+					'task_preset_reset':
+						{
+								'task_preset': 'Chat',
+								'response_format': 'Markdown',
+								'use_chat_history': True,
+								'use_document_context': False
+						},
+					'reasoning_controls_reset':
+						{
+								'reasoning_depth': 'Medium',
+								'answer_only': False,
+								'use_self_check': False,
+								'deterministic_reasoning': False
+						},
+					'coding_controls_reset':
+						{
+								'coding_language': 'Python',
+								'coding_task': 'Generate',
+								'coding_include_comments': True,
+								'coding_editor_format': True,
+								'coding_fenced_output': True,
+								'translation_target_language': 'English'
+						},
+					'response_controls_reset':
+						{
+								'top_k': 0,
+								'top_percent': 0.95,
+								'temperature': 0.0,
+								'is_grounded': False
+						},
+					'probability_controls_reset':
+						{
+								'frequency_penalty': 0.0,
+								'presense_penalty': 0.0,
+								'repeat_penalty': 1.1,
+								'repeat_window': 0
+						},
+					'context_controls_reset':
+						{
+								'random_seed': 0,
+								'max_tokens': 1024,
+								'cpu_threads': int( cfg.CORES ),
+								'context_window': int( cfg.DEFAULT_CTX )
+						}
+			}
+			
+			def request_text_generation_reset( reset_name: str ) -> None:
+				"""
+				Purpose:
+				--------
+				Request a Text Generation control reset without directly modifying any
+				widget-owned keys after their widgets have been instantiated.
+		
+				Parameters:
+				-----------
+				reset_name : str
+					Name of the reset group to process on the next safe script pass.
+		
+				Returns:
+				--------
+				None
+				"""
+				st.session_state[ 'pending_text_generation_reset' ] = str( reset_name or '' )
+			
+			pending_text_reset = st.session_state.pop( 'pending_text_generation_reset', None )
+			if pending_text_reset:
+				reset_values = text_reset_defaults.get( str( pending_text_reset ), { } )
+				
+				if isinstance( reset_values, dict ):
+					for reset_key, reset_value in reset_values.items( ):
+						st.session_state[ reset_key ] = reset_value
+			
+			# ------------------------------------------------------------------
+			# Task Preset
+			# ------------------------------------------------------------------
 			with st.expander( label='Task Preset', icon='🧭', expanded=False ):
-				task_c1, task_c2, task_c3, task_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ], border=True, gap='medium' )
+				task_c1, task_c2, task_c3, task_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ], border=True,
+					gap='medium' )
 				
 				with task_c1:
 					st.selectbox( label='Task Type',
-						options=[ 'Chat', 'Reasoning', 'Coding', 'Translation', 'Summarization',
-								'Extraction' ], key='task_preset' )
+						options=[
+								'Chat',
+								'Reasoning',
+								'Coding',
+								'Translation',
+								'Summarization',
+								'Extraction'
+						],
+						key='task_preset' )
 				
 				with task_c2:
 					st.selectbox( label='Response Format',
@@ -3490,26 +6945,23 @@ if mode == 'Text Generation':
 						value=bool( st.session_state.get( 'use_document_context', False ) ),
 						key='use_document_context' )
 				
-				if st.button( label='Reset', key='task_preset_reset', width='stretch' ):
-					for key in [ 'task_preset', 'response_format',
-					             'use_chat_history', 'use_document_context' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button( label='Reset', key='task_preset_reset', width='stretch',
+					on_click=request_text_generation_reset, args=('task_preset_reset',) )
 			
+			# ------------------------------------------------------------------
+			# Reasoning Controls
+			# ------------------------------------------------------------------
 			with st.expander( label='Reasoning Controls', icon='🧩', expanded=False ):
-				reason_c1, reason_c2, reason_c3, reason_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ], border=True, gap='medium' )
+				reason_c1, reason_c2, reason_c3, reason_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
+					border=True, gap='medium' )
 				
 				with reason_c1:
-					st.selectbox( label='Reasoning Depth', options=[ 'Low', 'Medium', 'High' ],
-						key='reasoning_depth' )
+					st.selectbox( label='Reasoning Depth',
+						options=[ 'Low', 'Medium', 'High' ], key='reasoning_depth' )
 				
 				with reason_c2:
 					st.toggle( label='Answer Only',
-						value=bool( st.session_state.get( 'answer_only', False ) ),
-						key='answer_only' )
+						value=bool( st.session_state.get( 'answer_only', False ) ), key='answer_only'  )
 				
 				with reason_c3:
 					st.toggle( label='Use Self-Check',
@@ -3517,25 +6969,33 @@ if mode == 'Text Generation':
 						key='use_self_check' )
 				
 				with reason_c4:
-					st.toggle( label='Prefer Deterministic Reasoning',
+					st.toggle(
+						label='Prefer Deterministic Reasoning',
 						value=bool( st.session_state.get( 'deterministic_reasoning', False ) ),
-						key='deterministic_reasoning' )
+						key='deterministic_reasoning'
+					)
 				
-				if st.button( label='Reset', key='reasoning_controls_reset', width='stretch' ):
-					for key in [ 'reasoning_depth', 'answer_only', 'use_self_check',
-							'deterministic_reasoning' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button( label='Reset', key='reasoning_controls_reset',
+					width='stretch', on_click=request_text_generation_reset,
+					args=('reasoning_controls_reset',) )
 			
+			# ------------------------------------------------------------------
+			# Coding Controls
+			# ------------------------------------------------------------------
 			with st.expander( label='Coding Controls', icon='🧾', expanded=False ):
-				code_c1, code_c2, code_c3, code_c4, code_c5 = st.columns(
-					[ 0.2, 0.2, 0.2, 0.2, 0.2 ], border=True, gap='medium' )
+				code_c1, code_c2, code_c3, code_c4, code_c5 = st.columns( [ 0.2, 0.2, 0.2, 0.2, 0.2 ],
+					border=True, gap='medium' )
 				
 				with code_c1:
 					st.selectbox( label='Code Language',
-						options=[ 'Python', 'C#', 'SQL', 'VBA', 'JavaScript', 'Markdown' ],
+						options=[
+								'Python',
+								'C#',
+								'SQL',
+								'VBA',
+								'JavaScript',
+								'Markdown'
+						],
 						key='coding_language' )
 				
 				with code_c2:
@@ -3559,28 +7019,413 @@ if mode == 'Text Generation':
 						key='coding_fenced_output' )
 				
 				translation_col_left, translation_col_right = st.columns( [ 0.5, 0.5 ] )
+				
 				with translation_col_left:
 					st.text_input( label='Translation Target Language',
 						key='translation_target_language' )
 				
 				with translation_col_right:
 					st.markdown( '<br>', unsafe_allow_html=True )
-					if st.button( label='Reset', key='coding_controls_reset', width='stretch' ):
-						for key in [ 'coding_language', 'coding_task', 'coding_include_comments',
-								'coding_editor_format', 'coding_fenced_output',
-								'translation_target_language' ]:
-							if key in st.session_state:
-								del st.session_state[ key ]
-						
-						st.rerun( )
+					st.button( label='Reset', key='coding_controls_reset',
+						width='stretch', on_click=request_text_generation_reset,
+						args=('coding_controls_reset',) )
 			
-			with st.expander( label='Response Controls', icon='↔️', expanded=False ):
-				mind_c1, mind_c2, mind_c3, mind_c4 = st.columns(
+			# ------------------------------------------------------------------
+			# Advanced Model Capabilities
+			# ------------------------------------------------------------------
+			with st.expander( label='Advanced Capabilities', icon='🧬', expanded=False ):
+				capabilities = get_active_model_capabilities( )
+				advanced_c1, advanced_c2, advanced_c3, advanced_c4 = st.columns(
 					[ 0.25, 0.25, 0.25, 0.25 ], border=True, gap='medium' )
 				
+				with advanced_c1:
+					st.toggle(
+						label='Enable Thinking',
+						value=bool( st.session_state.get( 'thinking_mode_enabled', False ) ),
+						key='thinking_mode_enabled',
+						disabled=not model_supports_capability( 'thinking' )
+					)
+				
+				with advanced_c2:
+					st.selectbox(
+						label='Thinking Effort',
+						options=[ 'Low', 'Medium', 'High' ],
+						key='thinking_effort',
+						disabled=not model_supports_capability( 'thinking' )
+					)
+				
+				with advanced_c3:
+					st.toggle(
+						label='Reasoning Summary',
+						value=bool( st.session_state.get( 'thinking_summary_enabled', True ) ),
+						key='thinking_summary_enabled',
+						disabled=not model_supports_capability( 'thinking' )
+					)
+				
+				with advanced_c4:
+					st.toggle(
+						label='Enable Advanced Coding',
+						value=bool( st.session_state.get( 'coding_mode_enabled', False ) ),
+						key='coding_mode_enabled',
+						disabled=not model_supports_capability( 'coding' )
+					)
+				
+				coding_ext_c1, coding_ext_c2 = st.columns( [ 0.5, 0.5 ], border=True, gap='medium' )
+				
+				with coding_ext_c1:
+					st.toggle(
+						label='Include Test Strategy',
+						value=bool( st.session_state.get( 'coding_test_request', False ) ),
+						key='coding_test_request',
+						disabled=not model_supports_capability( 'coding' )
+					)
+				
+				with coding_ext_c2:
+					st.toggle(
+						label='Explain Implementation',
+						value=bool( st.session_state.get( 'coding_explain_request', False ) ),
+						key='coding_explain_request',
+						disabled=not model_supports_capability( 'coding' )
+					)
+				
+				st.divider( )
+				
+				function_c1, function_c2 = st.columns( [ 0.35, 0.65 ], border=True, gap='medium' )
+				
+				with function_c1:
+					st.toggle(
+						label='Enable Function Calling',
+						value=bool( st.session_state.get( 'function_call_enabled', False ) ),
+						key='function_call_enabled',
+						disabled=not model_supports_capability( 'function_calling' )
+					)
+					
+					st.text_area(
+						label='Function Call Prompt',
+						height=120,
+						key='function_call_prompt',
+						placeholder='Optional developer note for when the model should emit a tool call.',
+						disabled=not model_supports_capability( 'function_calling' )
+					)
+				
+				with function_c2:
+					st.text_area(
+						label='Function Schema JSON',
+						height=220,
+						key='function_schema_text',
+						disabled=not model_supports_capability( 'function_calling' )
+					)
+				
+				status_rows: List[ Dict[ str, Any ] ] = [
+						{
+								'Capability': 'Thinking',
+								'Enabled': bool( st.session_state.get(
+									'thinking_mode_enabled', False ) ),
+								'Supported': bool( capabilities.get( 'thinking', False ) )
+						},
+						{
+								'Capability': 'Advanced Coding',
+								'Enabled': bool( st.session_state.get(
+									'coding_mode_enabled', False ) ),
+								'Supported': bool( capabilities.get( 'coding', False ) )
+						},
+						{
+								'Capability': 'Function Calling',
+								'Enabled': bool( st.session_state.get(
+									'function_call_enabled', False ) ),
+								'Supported': bool( capabilities.get( 'function_calling', False ) )
+						},
+						{
+								'Capability': 'Web Browsing',
+								'Enabled': False,
+								'Supported': bool( capabilities.get( 'web_browsing', False ) )
+						}
+				]
+				
+				df_capabilities = pd.DataFrame( status_rows )
+				st.dataframe( df_capabilities, use_container_width=True, hide_index=True )
+				
+				if not model_supports_capability( 'thinking' ):
+					st.caption( get_capability_status_message( 'thinking' ) )
+				
+				if not model_supports_capability( 'coding' ):
+					st.caption( get_capability_status_message( 'coding' ) )
+				
+				if not model_supports_capability( 'function_calling' ):
+					st.caption( get_capability_status_message( 'function_calling' ) )
+				
+				if st.button( label='Reset Advanced Capabilities',
+						key='advanced_capabilities_reset', width='stretch' ):
+					st.session_state[ 'thinking_mode_enabled' ] = False
+					st.session_state[ 'thinking_effort' ] = 'Medium'
+					st.session_state[ 'thinking_summary_enabled' ] = True
+					st.session_state[ 'coding_mode_enabled' ] = False
+					st.session_state[ 'coding_test_request' ] = False
+					st.session_state[ 'coding_explain_request' ] = False
+					st.session_state[ 'function_call_enabled' ] = False
+					st.session_state[ 'function_call_prompt' ] = ''
+					st.session_state[ 'function_schema_text' ] = get_default_function_schema_text( )
+					st.session_state[ 'function_call_response' ] = ''
+					st.session_state[ 'function_call_result' ] = ''
+					st.session_state[ 'function_call_status' ] = ''
+					st.rerun( )
+			
+			# ------------------------------------------------------------------
+			# Gipity Tools and Web Browsing
+			# ------------------------------------------------------------------
+			with st.expander( label='Tools & Web', icon='🧰', expanded=False ):
+				tools_supported = bool( model_supports_capability( 'function_calling' ) )
+				web_supported = bool( model_supports_capability( 'web_browsing' ) )
+				
+				tool_status_c1, tool_status_c2, tool_status_c3 = st.columns(
+					[ 0.34, 0.33, 0.33 ], border=True, gap='medium' )
+				
+				with tool_status_c1:
+					st.metric( 'Selected Model', get_selected_model_name( ) )
+				
+				with tool_status_c2:
+					st.metric( 'Function Calling',
+						'Enabled' if tools_supported else 'Unavailable' )
+				
+				with tool_status_c3:
+					st.metric( 'Web Browsing',
+						'Enabled' if web_supported else 'Unavailable' )
+				
+				if not tools_supported:
+					st.info( get_capability_status_message( 'function_calling' ) )
+				
+				if not web_supported:
+					st.info( get_capability_status_message( 'web_browsing' ) )
+				
+				tool_c1, tool_c2 = st.columns( [ 0.45, 0.55 ], border=True, gap='medium' )
+				
+				with tool_c1:
+					st.text_area(
+						label='Tool Task',
+						height=150,
+						key='function_call_prompt',
+						placeholder=(
+								'Example: Fetch https://example.com and summarize the page '
+								'in five bullets.'),
+						disabled=not tools_supported
+					)
+					
+					generate_tool = st.button(
+						label='Generate Function Call',
+						key='generate_function_call_button',
+						width='stretch',
+						disabled=not tools_supported
+					)
+					
+					execute_tool = st.button(
+						label='Execute Function Call',
+						key='execute_function_call_button',
+						width='stretch',
+						disabled=not tools_supported
+					)
+					
+					final_answer_tool = st.button(
+						label='Generate Final Answer from Tool Result',
+						key='tool_final_answer_button',
+						width='stretch',
+						disabled=not tools_supported
+					)
+				
+				with tool_c2:
+					st.text_area(
+						label='Generated Function Call JSON',
+						height=180,
+						key='function_call_model_json',
+						disabled=not tools_supported
+					)
+					
+					st.text_area(
+						label='Tool Execution Result',
+						height=180,
+						key='function_call_result',
+						disabled=True
+					)
+				
+				if generate_tool:
+					try:
+						task_value = str(
+							st.session_state.get( 'function_call_prompt', '' ) or '' ).strip( )
+						
+						response = generate_function_call_json( task_value )
+						st.session_state[ 'function_call_model_json' ] = response
+						st.session_state[ 'function_call_response' ] = response
+						st.session_state[ 'function_call_status' ] = (
+								'Function call generated.')
+						st.success( st.session_state[ 'function_call_status' ] )
+					except Exception as e:
+						st.session_state[ 'function_call_status' ] = (
+								f'Function-call generation failed: {e}')
+						st.error( st.session_state[ 'function_call_status' ] )
+				
+				if execute_tool:
+					try:
+						tool_text = str(
+							st.session_state.get( 'function_call_model_json', '' ) or '' ).strip( )
+						result = execute_tool_call_text( tool_text )
+						
+						st.session_state[ 'function_call_result' ] = str(
+							result.get( 'result', '' ) or '' )
+						st.session_state[ 'function_call_status' ] = (
+								f'Executed allowlisted function: {result.get( "name", "" )}')
+						
+						if str( result.get( 'name', '' ) ) == 'web_browse_url':
+							st.session_state[ 'web_browse_context_buffer' ] = str(
+								result.get( 'result', '' ) or '' )
+						
+						st.success( st.session_state[ 'function_call_status' ] )
+					except Exception as e:
+						st.session_state[ 'function_call_status' ] = (
+								f'Function-call execution failed: {e}')
+						st.error( st.session_state[ 'function_call_status' ] )
+				
+				if final_answer_tool:
+					try:
+						task_value = str(
+							st.session_state.get( 'function_call_prompt', '' ) or '' ).strip( )
+						result_text = str(
+							st.session_state.get( 'function_call_result', '' ) or '' ).strip( )
+						
+						if not result_text:
+							st.info( 'Execute a function call before generating the final answer.' )
+						else:
+							tool_result = {
+									'name': 'app_tool',
+									'arguments': { },
+									'result': result_text
+							}
+							final_answer = generate_tool_grounded_final_answer(
+								user_task=task_value,
+								tool_result=tool_result
+							)
+							
+							st.session_state[ 'function_call_response' ] = final_answer
+							st.session_state[ 'function_call_status' ] = (
+									'Final answer generated from tool result.')
+							st.markdown( '### Tool-Grounded Final Answer' )
+							st.markdown( final_answer )
+					except Exception as e:
+						st.session_state[ 'function_call_status' ] = (
+								f'Final answer generation failed: {e}')
+						st.error( st.session_state[ 'function_call_status' ] )
+				
+				status_value = str(
+					st.session_state.get( 'function_call_status', '' ) or '' ).strip( )
+				if status_value:
+					st.caption( status_value )
+				
+				st.divider( )
+				
+				web_c1, web_c2 = st.columns( [ 0.45, 0.55 ], border=True, gap='medium' )
+				
+				with web_c1:
+					st.text_input(
+						label='Web URL',
+						key='web_browse_url',
+						placeholder='https://example.com/article',
+						disabled=not web_supported
+					)
+					
+					st.text_input(
+						label='Allowed Domain Optional',
+						key='web_browse_allow_domain',
+						placeholder='example.com',
+						disabled=not web_supported
+					)
+					
+					st.text_area(
+						label='Web Browse Prompt',
+						height=120,
+						key='web_browse_prompt',
+						placeholder='Summarize the page and identify the most important facts.',
+						disabled=not web_supported
+					)
+					
+					browse_web = st.button(
+						label='Fetch Web Context',
+						key='web_browse_fetch_button',
+						width='stretch',
+						disabled=not web_supported
+					)
+					
+					send_web = st.button(
+						label='Send Web Context to Text Generation',
+						key='web_browse_send_context_button',
+						width='stretch',
+						disabled=not web_supported
+					)
+				
+				with web_c2:
+					st.text_area(
+						label='Fetched Web Context',
+						height=340,
+						key='web_browse_result',
+						disabled=True
+					)
+				
+				if browse_web:
+					try:
+						context_text = web_browse_url_tool(
+							url=str( st.session_state.get( 'web_browse_url', '' ) or '' ),
+							prompt=str( st.session_state.get( 'web_browse_prompt', '' ) or '' ),
+							allowed_domain=str(
+								st.session_state.get( 'web_browse_allow_domain', '' ) or '' ),
+							max_chars=12000
+						)
+						
+						st.session_state[ 'web_browse_result' ] = context_text
+						st.session_state[ 'web_browse_context_buffer' ] = context_text
+						st.session_state[ 'web_browse_status' ] = 'Web context fetched.'
+						st.success( st.session_state[ 'web_browse_status' ] )
+					except Exception as e:
+						st.session_state[ 'web_browse_status' ] = f'Web fetch failed: {e}'
+						st.error( st.session_state[ 'web_browse_status' ] )
+				
+				if send_web:
+					context_text = str(
+						st.session_state.get( 'web_browse_context_buffer', '' ) or '' ).strip( )
+					
+					if context_text:
+						send_web_context_to_text_generation( context_text )
+						st.success( 'Web context added to Text Generation context.' )
+					else:
+						st.info( 'No web context is available to send.' )
+				
+				web_status = str(
+					st.session_state.get( 'web_browse_status', '' ) or '' ).strip( )
+				if web_status:
+					st.caption( web_status )
+				
+				if st.button( label='Clear Tool and Web State',
+						key='clear_tool_web_state_button', width='stretch' ):
+					st.session_state[ 'function_call_prompt' ] = ''
+					st.session_state[ 'function_call_response' ] = ''
+					st.session_state[ 'function_call_result' ] = ''
+					st.session_state[ 'function_call_status' ] = ''
+					st.session_state[ 'function_call_model_json' ] = ''
+					st.session_state[ 'web_browse_url' ] = ''
+					st.session_state[ 'web_browse_allow_domain' ] = ''
+					st.session_state[ 'web_browse_prompt' ] = ''
+					st.session_state[ 'web_browse_result' ] = ''
+					st.session_state[ 'web_browse_status' ] = ''
+					st.session_state[ 'web_browse_context_buffer' ] = ''
+					st.rerun( )
+					
+			# ------------------------------------------------------------------
+			# Response Controls
+			# ------------------------------------------------------------------
+			with st.expander( label='Response Controls', icon='↔️', expanded=False ):
+				mind_c1, mind_c2, mind_c3, mind_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
+					border=True, gap='medium' )
+				
 				with mind_c1:
-					st.slider( label='Temperature', min_value=0.0, max_value=1.0,
-						help=cfg.TEMPERATURE, key='temperature' )
+					st.slider( label='Temperature', min_value=0.0,
+						max_value=1.0, help=cfg.TEMPERATURE,
+						key='temperature' )
 					temperature = st.session_state[ 'temperature' ]
 				
 				with mind_c2:
@@ -3597,28 +7442,28 @@ if mode == 'Text Generation':
 					st.toggle( label='Use Grounding',
 						value=bool( st.session_state.get( 'is_grounded', False ) ),
 						key='is_grounded' )
-					
 					is_grounded = st.session_state[ 'is_grounded' ]
 				
-				if st.button( label='Reset', key='response_controls_reset', width='stretch' ):
-					for key in [ 'top_k', 'top_percent', 'temperature', 'is_grounded' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button( label='Reset', key='response_controls_reset', width='stretch',
+					on_click=request_text_generation_reset, args=('response_controls_reset',) )
 			
+			# ------------------------------------------------------------------
+			# Inference Settings
+			# ------------------------------------------------------------------
 			with st.expander( label='Inference Settings', icon='🎚️', expanded=False ):
-				prob_c1, prob_c2, prob_c3, prob_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ], border=True, gap='medium' )
+				prob_c1, prob_c2, prob_c3, prob_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
+					border=True, gap='medium' )
 				
 				with prob_c1:
 					st.slider( label='Repeat Window', min_value=0, max_value=1024,
-						step=16, key='repeat_window', help=cfg.REPEAT_WINDOW )
+						step=16, key='repeat_window',
+						help=cfg.REPEAT_WINDOW )
 					repeat_window = st.session_state[ 'repeat_window' ]
 				
 				with prob_c2:
 					st.slider( label='Repeat Penalty', min_value=0.0, max_value=2.0,
-						key='repeat_penalty', step=0.05, help=cfg.REPEAT_PENALTY )
+						key='repeat_penalty', step=0.05,
+						help=cfg.REPEAT_PENALTY )
 					repeat_penalty = st.session_state[ 'repeat_penalty' ]
 				
 				with prob_c3:
@@ -3628,38 +7473,24 @@ if mode == 'Text Generation':
 					presense_penalty = st.session_state[ 'presense_penalty' ]
 				
 				with prob_c4:
-					st.slider( label='Frequency Penalty', min_value=0.0,
-						max_value=2.0, key='frequency_penalty',
-						step=0.05, help=cfg.FREQUENCY_PENALTY )
+					st.slider( label='Frequency Penalty', min_value=0.0, max_value=2.0,
+						key='frequency_penalty', step=0.05, help=cfg.FREQUENCY_PENALTY )
 					frequency_penalty = st.session_state[ 'frequency_penalty' ]
 				
-				if st.button( label='Reset', key='probability_controls_reset', width='stretch' ):
-					for key in [
-							'frequency_penalty',
-							'presense_penalty',
-							'temperature',
-							'repeat_penalty',
-							'repeat_window'
-					]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button( label='Reset', key='probability_controls_reset', width='stretch',
+					on_click=request_text_generation_reset, args=('probability_controls_reset',) )
 			
+			# ------------------------------------------------------------------
+			# Context Controls
+			# ------------------------------------------------------------------
 			with st.expander( label='Context Controls', icon='🎛️', expanded=False ):
-				ctx_c1, ctx_c2, ctx_c3, ctx_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ], border=True, gap='medium'
-				)
+				ctx_c1, ctx_c2, ctx_c3, ctx_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ], border=True,
+					gap='medium' )
 				
 				with ctx_c1:
-					st.slider(
-						label='Context Window',
-						min_value=0,
-						max_value=8192,
-						key='context_window',
-						step=512,
-						help=cfg.CONTEXT_WINDOW
-					)
+					st.slider( label='Context Window', min_value=0, max_value=8192,
+						key='context_window', step=512,
+						help=cfg.CONTEXT_WINDOW )
 					context_window = st.session_state[ 'context_window' ]
 				
 				with ctx_c2:
@@ -3676,130 +7507,58 @@ if mode == 'Text Generation':
 					st.slider( label='Random Seed', min_value=0, max_value=4096,
 						step=1, key='random_seed', help=cfg.SEED )
 				
-				if st.button( label='Reset', key='context_controls_reset', width='stretch' ):
-					for key in [ 'random_seed', 'max_tokens', 'cpu_threads', 'context_window' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
-		
+				st.button( label='Reset', key='context_controls_reset', width='stretch',
+					on_click=request_text_generation_reset, args=('context_controls_reset',) )
+				
 		# ------------------------------------------------------------------
 		# Expander — System Instructions
 		# ------------------------------------------------------------------
-		with st.expander( label='System Instructions', icon='🖥️', expanded=False,
-				width='stretch' ):
-			in_left, in_right = st.columns( [ 0.8, 0.2 ] )
-			prompt_names = fetch_prompt_names( cfg.DB_PATH )
-			if not prompt_names:
-				prompt_names = [ '' ]
+		with st.expander( label='System Instructions', icon='🖥️', expanded=False, width='stretch' ):
+			render_system_instructions( prefix='text', include_apply_preset=True,
+				include_preview=True )
 			
-			with in_left:
-				st.text_area(
-					label='Enter Text',
-					height=120,
-					width='stretch',
-					help=cfg.SYSTEM_INSTRUCTIONS,
-					key='system_instructions'
-				)
-			
-			def _on_template_change( ) -> None:
-				name = st.session_state.get( 'instructions' )
-				if name and name != 'No Templates Found':
-					text = fetch_prompt_text( cfg.DB_PATH, name )
-					if text is not None:
-						st.session_state[ 'system_instructions' ] = text
-						st.session_state[ 'active_prompt_caption' ] = name
-			
-			with in_right:
-				st.selectbox(
-					label='Use Template',
-					options=prompt_names,
-					index=None,
-					key='instructions',
-					on_change=_on_template_change
-				)
-			
-			def _on_clear( ) -> None:
-				st.session_state[ 'system_instructions' ] = ''
-				st.session_state[ 'instructions' ] = ''
-				st.session_state[ 'active_prompt_caption' ] = ''
-			
-			def _on_convert_system_instructions( ) -> None:
-				text = st.session_state.get( 'system_instructions', '' )
-				if not isinstance( text, str ) or not text.strip( ):
-					return
-				
-				src = text.strip( )
-				
-				if cfg.XML_BLOCK_PATTERN.search( src ):
-					converted = convert_xml( src )
-				else:
-					converted = convert_markdown( src )
-				
-				st.session_state[ 'system_instructions' ] = converted
-			
-			def _on_apply_preset_template( ) -> None:
-				task_preset = str(
-					st.session_state.get( 'task_preset', 'Chat' ) or 'Chat' ).strip( )
-				
-				preset_map = {
-						'Chat': 'You are Bro, a helpful local assistant. Be accurate, practical, and concise.',
-						'Reasoning': 'Solve the task carefully, step by step internally, then provide a clear answer.',
-						'Coding': 'Produce correct, editor-ready code and explain only as needed.',
-						'Translation': 'Translate faithfully while preserving meaning and tone.',
-						'Summarization': 'Summarize faithfully and preserve key facts.',
-						'Extraction': 'Extract only supported facts and do not invent missing values.'
-				}
-				
-				st.session_state[ 'system_instructions' ] = preset_map.get( task_preset,
-					preset_map[ 'Chat' ] )
-			
-			user_preview_input = st.session_state.get( 'last_preview_input', '' )
-			btn_c1, btn_c2, btn_c3, btn_c4 = st.columns( [ 0.35, 0.2, 0.2, 0.25 ] )
-			with btn_c1:
-				st.button(
-					label='Clear Instructions',
-					width='stretch',
-					on_click=_on_clear
-				)
-			
-			with btn_c2:
-				st.button(
-					label='XML <-> Markdown',
-					width='stretch',
-					on_click=_on_convert_system_instructions
-				)
-			
-			with btn_c3:
-				st.button(
-					label='Apply Preset',
-					width='stretch',
-					on_click=_on_apply_preset_template
-				)
-			
-			with btn_c4:
-				if st.button( label='Preview Prompt', width='stretch' ):
-					st.session_state[ 'preview_effective_prompt' ] = not bool(
-						st.session_state.get( 'preview_effective_prompt', False )
-					)
-			
-			if bool( st.session_state.get( 'preview_effective_prompt', False ) ):
-				st.text_area(
-					label='Effective Prompt Preview',
-					value=build_effective_prompt_preview( user_preview_input ),
-					height=220,
-					disabled=True
-				)
-		
 		st.markdown( cfg.BLUE_DIVIDER, unsafe_allow_html=True )
+	
+		# ------------------------------------------------------------------
+		# Chat History Render
+		# ------------------------------------------------------------------
+		if 'messages' not in st.session_state or not isinstance( st.session_state.messages, list ):
+			st.session_state.messages = [ ]
 		
-		for r, c in st.session_state.messages:
-			with st.chat_message( r ):
-				st.markdown( c )
+		for msg in st.session_state.messages:
+			role = ''
+			content = ''
+			
+			if isinstance( msg, dict ):
+				role = str( msg.get( 'role', '' ) or '' ).strip( )
+				content = msg.get( 'content', '' )
+			
+			elif isinstance( msg, tuple ) or isinstance( msg, list ):
+				if len( msg ) == 2:
+					role = str( msg[ 0 ] or '' ).strip( )
+					content = msg[ 1 ]
+			
+			if role not in ('user', 'assistant', 'system'):
+				continue
+			
+			if content is None:
+				content = ''
+			elif not isinstance( content, str ):
+				content = str( content )
+			
+			with st.chat_message( role ):
+				st.markdown( content )
 		
-		user_input = st.chat_input( 'Ask Bro…' )
-		if user_input:
+		# ------------------------------------------------------------------
+		# Chat Input
+		# ------------------------------------------------------------------
+		user_input = st.chat_input( 'Ask Loca…' )
+		if user_input and isinstance( user_input, str ) and user_input.strip( ):
+			user_input = user_input.strip( )
 			st.session_state[ 'last_preview_input' ] = str( user_input )
+			
+			if 'messages' not in st.session_state or not isinstance( st.session_state.messages, list ):
+				st.session_state.messages = [ ]
 			
 			save_message( 'user', user_input )
 			st.session_state.messages.append( ('user', user_input) )
@@ -3816,6 +7575,12 @@ if mode == 'Text Generation':
 					max_tokens=int( st.session_state.get( 'max_tokens', 1024 ) ) or 1024,
 					stream=True, output=out )
 			
+			if buf is None:
+				buf = ''
+			elif not isinstance( buf, str ):
+				buf = str( buf )
+			
+			buf = buf.strip( )
 			save_message( 'assistant', buf )
 			st.session_state.messages.append( ('assistant', buf) )
 		
@@ -3825,7 +7590,7 @@ if mode == 'Text Generation':
 			st.rerun( )
 
 # ==============================================================================
-# RETRIEVAL AUGMENTATION
+# DOCNQ&A
 # ==============================================================================
 elif mode == 'Document Q&A':
 	messages = st.session_state.get( 'messages', [ ] )
@@ -3852,77 +7617,198 @@ elif mode == 'Document Q&A':
 		# Expander — Mind Controls
 		# ------------------------------------------------------------------
 		with st.expander( label='Mind Controls', icon='🧠', expanded=False ):
+			# ------------------------------------------------------------------
+			# Document Q&A reset request processing.
+			#
+			# Important:
+			# ---------
+			# Streamlit widget-owned keys must be reset before their widgets are
+			# instantiated in this script pass. Buttons below only set the pending
+			# request key. The actual reset is processed here at the top of this
+			# expander before any controls are created.
+			# ------------------------------------------------------------------
+			docqna_reset_defaults: Dict[ str, Dict[ str, Any ] ] = {
+					'doc_retrieval_controls_reset':
+						{
+								'retrieval_k': 6,
+								'retrieval_chunk_size': 1200,
+								'retrieval_chunk_overlap': 200,
+								'show_retrieved_chunks': True,
+								'require_grounding': True,
+								'answer_from_excerpts_only': True,
+								'prefer_sqlite_vec': True,
+								'allow_similarity_fallback': True
+						},
+					'doc_parsing_controls_reset':
+						{
+								'ocr_enabled': False,
+								'prefer_native_pdf_text': True,
+								'include_page_markers': False,
+								'show_docqna_diagnostics': False
+						},
+					'doc_response_controls_reset':
+						{
+								'top_k': 0,
+								'top_percent': 0.95,
+								'temperature': 0.0
+						},
+					'doc_probability_controls_reset':
+						{
+								'frequency_penalty': 0.0,
+								'presense_penalty': 0.0,
+								'repeat_penalty': 1.1,
+								'repeat_window': 0
+						},
+					'doc_context_controls_reset':
+						{
+								'random_seed': 0,
+								'max_tokens': 1024,
+								'cpu_threads': int( cfg.CORES ),
+								'context_window': int( cfg.DEFAULT_CTX )
+						}
+			}
 			
+			def request_docqna_reset( reset_name: str ) -> None:
+				"""
+				Purpose:
+				--------
+				Request a Document Q&A control reset without directly modifying any
+				widget-owned keys after their widgets have been instantiated.
+		
+				Parameters:
+				-----------
+				reset_name : str
+					Name of the reset group to process on the next safe script pass.
+		
+				Returns:
+				--------
+				None
+				"""
+				st.session_state[ 'pending_docqna_reset' ] = str( reset_name or '' )
+			
+			pending_docqna_reset = st.session_state.pop( 'pending_docqna_reset', None )
+			if pending_docqna_reset:
+				reset_values = docqna_reset_defaults.get( str( pending_docqna_reset ), { } )
+				
+				if isinstance( reset_values, dict ):
+					for reset_key, reset_value in reset_values.items( ):
+						st.session_state[ reset_key ] = reset_value
+			
+			# ------------------------------------------------------------------
+			# Retrieval Controls
+			# ------------------------------------------------------------------
 			with st.expander( label='Retrieval Controls', icon='🧲', expanded=False ):
-				ret_c1, ret_c2, ret_c3, ret_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
-					border=True, gap='medium' )
+				ret_c1, ret_c2, ret_c3, ret_c4 = st.columns(
+					[ 0.25, 0.25, 0.25, 0.25 ],
+					border=True,
+					gap='medium'
+				)
 				
 				with ret_c1:
-					st.slider( label='Chunks to Retrieve', min_value=1,
-						max_value=20, step=1, key='retrieval_k' )
+					st.slider(
+						label='Chunks to Retrieve',
+						min_value=1,
+						max_value=20,
+						step=1,
+						key='retrieval_k'
+					)
 				
 				with ret_c2:
-					st.slider( label='Chunk Size', min_value=256, max_value=4000,
-						step=64, key='retrieval_chunk_size' )
+					st.slider(
+						label='Chunk Size',
+						min_value=256,
+						max_value=4000,
+						step=64,
+						key='retrieval_chunk_size'
+					)
 				
 				with ret_c3:
-					st.slider( label='Chunk Overlap', min_value=0, max_value=1000,
-						step=25, key='retrieval_chunk_overlap' )
+					st.slider(
+						label='Chunk Overlap',
+						min_value=0,
+						max_value=1000,
+						step=25,
+						key='retrieval_chunk_overlap'
+					)
 				
 				with ret_c4:
-					st.toggle( label='Show Retrieved Chunks',
+					st.toggle(
+						label='Show Retrieved Chunks',
 						value=bool( st.session_state.get( 'show_retrieved_chunks', True ) ),
-						key='show_retrieved_chunks' )
+						key='show_retrieved_chunks'
+					)
 				
-				ret_c5, ret_c6, ret_c7, ret_c8 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
-					border=True, gap='medium' )
+				ret_c5, ret_c6, ret_c7, ret_c8 = st.columns(
+					[ 0.25, 0.25, 0.25, 0.25 ],
+					border=True,
+					gap='medium'
+				)
 				
 				with ret_c5:
-					st.toggle( label='Require Grounding',
+					st.toggle(
+						label='Require Grounding',
 						value=bool( st.session_state.get( 'require_grounding', True ) ),
-						key='require_grounding' )
+						key='require_grounding'
+					)
 				
 				with ret_c6:
-					st.toggle( label='Answer From Excerpts Only',
+					st.toggle(
+						label='Answer From Excerpts Only',
 						value=bool( st.session_state.get( 'answer_from_excerpts_only', True ) ),
-						key='answer_from_excerpts_only' )
+						key='answer_from_excerpts_only'
+					)
 				
 				with ret_c7:
-					st.toggle( label='Use sqlite-vec',
+					st.toggle(
+						label='Use sqlite-vec',
 						value=bool( st.session_state.get( 'prefer_sqlite_vec', True ) ),
-						key='prefer_sqlite_vec' )
+						key='prefer_sqlite_vec'
+					)
 				
 				with ret_c8:
-					st.toggle( label='Fallback Cosine Search',
+					st.toggle(
+						label='Fallback Cosine Search',
 						value=bool( st.session_state.get( 'allow_similarity_fallback', True ) ),
-						key='allow_similarity_fallback' )
+						key='allow_similarity_fallback'
+					)
 				
-				if st.button( label='Reset', key='doc_retrieval_controls_reset', width='stretch' ):
-					for key in [ 'retrieval_k', 'retrieval_chunk_size', 'retrieval_chunk_overlap',
-					             'show_retrieved_chunks', 'require_grounding', 'answer_from_excerpts_only',
-					             'prefer_sqlite_vec', 'allow_similarity_fallback' ]:
-						
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button(
+					label='Reset',
+					key='doc_retrieval_controls_reset',
+					width='stretch',
+					on_click=request_docqna_reset,
+					args=('doc_retrieval_controls_reset',)
+				)
 			
+			# ------------------------------------------------------------------
+			# Document Actions
+			# ------------------------------------------------------------------
 			with st.expander( label='Document Actions', icon='🗂️', expanded=False ):
 				action_c1, action_c2 = st.columns( [ 0.6, 0.4 ], border=True )
 				
 				with action_c1:
-					st.selectbox( label='Action',
-						options=[ 'Answer Question', 'Summarize Active Document',
-						          'Extract Key Points', 'Generate Outline',
-						          'Extract Entities', 'Extract Tables',
-						          'Compare Active Documents' ], key='docqna_action' )
+					st.selectbox(
+						label='Action',
+						options=[
+								'Answer Question',
+								'Summarize Active Document',
+								'Extract Key Points',
+								'Generate Outline',
+								'Extract Entities',
+								'Extract Tables',
+								'Compare Active Documents'
+						],
+						key='docqna_action'
+					)
 				
 				with action_c2:
 					st.markdown( '<br>', unsafe_allow_html=True )
+					
 					if st.button( 'Run Action', key='doc_run_action', width='stretch' ):
 						action_name = str(
 							st.session_state.get( 'docqna_action', 'Answer Question' ) or
-							'Answer Question' ).strip( )
+							'Answer Question'
+						).strip( )
 						
 						action_prompts = {
 								'Summarize Active Document':
@@ -3940,267 +7826,446 @@ elif mode == 'Document Q&A':
 						}
 						
 						if action_name != 'Answer Question':
-							action_prompt = action_prompts.get( action_name,
-								'Summarize the active document set.' )
+							action_prompt = action_prompts.get(
+								action_name,
+								'Summarize the active document set.'
+							)
 							
 							with st.chat_message( 'assistant' ):
 								out = st.empty( )
-								response = run_llm_turn( user_input=build_docqna_input(
-									user_query=action_prompt,
-									k=int( st.session_state.get( 'retrieval_k', 6 ) ) ),
+								response = run_llm_turn(
+									user_input=build_docqna_input(
+										user_query=action_prompt,
+										k=int( st.session_state.get( 'retrieval_k', 6 ) )
+									),
 									temperature=float( st.session_state.get( 'temperature', 0.0 ) ),
 									top_p=float( st.session_state.get( 'top_percent', 0.95 ) ),
-									repeat_penalty=float( st.session_state.get( 'repeat_penalty', 1.1 ) ),
-									max_tokens=int( st.session_state.get( 'max_tokens', 1024 ) ) or 1024,
-									stream=True, output=out )
+									repeat_penalty=float(
+										st.session_state.get( 'repeat_penalty', 1.1 )
+									),
+									max_tokens=int(
+										st.session_state.get( 'max_tokens', 1024 )
+									) or 1024,
+									stream=True,
+									output=out
+								)
 							
 							save_message( 'assistant', response )
 							st.session_state.messages.append( ('assistant', response) )
 			
+			# ------------------------------------------------------------------
+			# Document Parsing
+			# ------------------------------------------------------------------
 			with st.expander( label='Document Parsing', icon='📄', expanded=False ):
-				parse_c1, parse_c2, parse_c3, parse_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
-					border=True, gap='medium' )
+				parse_c1, parse_c2, parse_c3, parse_c4 = st.columns(
+					[ 0.25, 0.25, 0.25, 0.25 ],
+					border=True,
+					gap='medium'
+				)
 				
 				with parse_c1:
-					st.toggle( label='Enable OCR',
+					st.toggle(
+						label='Enable OCR',
 						value=bool( st.session_state.get( 'ocr_enabled', False ) ),
-						key='ocr_enabled' )
+						key='ocr_enabled'
+					)
 				
 				with parse_c2:
-					st.toggle( label='Prefer Native PDF Text',
+					st.toggle(
+						label='Prefer Native PDF Text',
 						value=bool( st.session_state.get( 'prefer_native_pdf_text', True ) ),
-						key='prefer_native_pdf_text' )
+						key='prefer_native_pdf_text'
+					)
 				
 				with parse_c3:
-					st.toggle( label='Include Page Markers',
+					st.toggle(
+						label='Include Page Markers',
 						value=bool( st.session_state.get( 'include_page_markers', False ) ),
-						key='include_page_markers' )
+						key='include_page_markers'
+					)
 				
 				with parse_c4:
-					st.toggle( label='Show Diagnostics',
+					st.toggle(
+						label='Show Diagnostics',
 						value=bool( st.session_state.get( 'show_docqna_diagnostics', False ) ),
-						key='show_docqna_diagnostics' )
+						key='show_docqna_diagnostics'
+					)
 				
-				if st.button( label='Reset', key='doc_parsing_controls_reset', width='stretch' ):
-					for key in [ 'ocr_enabled', 'prefer_native_pdf_text',
-							'include_page_markers', 'show_docqna_diagnostics' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button(
+					label='Reset',
+					key='doc_parsing_controls_reset',
+					width='stretch',
+					on_click=request_docqna_reset,
+					args=('doc_parsing_controls_reset',)
+				)
 			
+			# ------------------------------------------------------------------
+			# Response Settings
+			# ------------------------------------------------------------------
 			with st.expander( label='Response Settings', icon='↔️', expanded=False ):
-				mind_c1, mind_c2, mind_c3 = st.columns( [ 0.33, 0.33, 0.33 ],
-					border=True, gap='medium' )
+				mind_c1, mind_c2, mind_c3 = st.columns(
+					[ 0.33, 0.33, 0.33 ],
+					border=True,
+					gap='medium'
+				)
 				
 				with mind_c1:
-					st.slider( label='Temperature', min_value=0.0, max_value=1.0,
+					st.slider(
+						label='Temperature',
+						min_value=0.0,
+						max_value=1.0,
 						value=float( st.session_state.get( 'temperature', 0.0 ) ),
-						help=cfg.TEMPERATURE, key='temperature' )
+						help=cfg.TEMPERATURE,
+						key='temperature'
+					)
 					temperature = st.session_state[ 'temperature' ]
 				
 				with mind_c2:
-					st.slider( label='Top-P', min_value=0.0, max_value=1.0, step=0.01,
-						key='top_percent', help=cfg.TOP_P )
+					st.slider(
+						label='Top-P',
+						min_value=0.0,
+						max_value=1.0,
+						step=0.01,
+						key='top_percent',
+						help=cfg.TOP_P
+					)
 					top_percent = st.session_state[ 'top_percent' ]
 				
 				with mind_c3:
-					st.slider( label='Top-K', min_value=0, max_value=50, step=1,
-						key='top_k', help=cfg.TOP_K )
+					st.slider(
+						label='Top-K',
+						min_value=0,
+						max_value=50,
+						step=1,
+						key='top_k',
+						help=cfg.TOP_K
+					)
 					top_k = st.session_state[ 'top_k' ]
 				
-				if st.button( label='Reset', key='doc_response_controls_reset', width='stretch' ):
-					for key in [ 'top_k', 'top_percent', 'temperature' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button(
+					label='Reset',
+					key='doc_response_controls_reset',
+					width='stretch',
+					on_click=request_docqna_reset,
+					args=('doc_response_controls_reset',)
+				)
 			
+			# ------------------------------------------------------------------
+			# Inference Settings
+			# ------------------------------------------------------------------
 			with st.expander( label='Inference Settings', icon='🎚️', expanded=False ):
-				prob_c1, prob_c2, prob_c3, prob_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
-					border=True, gap='medium' )
+				prob_c1, prob_c2, prob_c3, prob_c4 = st.columns(
+					[ 0.25, 0.25, 0.25, 0.25 ],
+					border=True,
+					gap='medium'
+				)
 				
 				with prob_c1:
-					st.slider( label='Repeat Window', min_value=0, max_value=1024,
-						step=16, key='repeat_window', help=cfg.REPEAT_WINDOW )
+					st.slider(
+						label='Repeat Window',
+						min_value=0,
+						max_value=1024,
+						step=16,
+						key='repeat_window',
+						help=cfg.REPEAT_WINDOW
+					)
 					repeat_window = st.session_state[ 'repeat_window' ]
 				
 				with prob_c2:
-					st.slider( label='Repeat Penalty', min_value=0.0, max_value=2.0,
-						key='repeat_penalty', step=0.05, help=cfg.REPEAT_PENALTY )
+					st.slider(
+						label='Repeat Penalty',
+						min_value=0.0,
+						max_value=2.0,
+						key='repeat_penalty',
+						step=0.05,
+						help=cfg.REPEAT_PENALTY
+					)
 					repeat_penalty = st.session_state[ 'repeat_penalty' ]
 				
 				with prob_c3:
-					st.slider( label='Presence Penalty', min_value=0.0, max_value=2.0,
-						key='presense_penalty', step=0.05, help=cfg.PRESENCE_PENALTY )
+					st.slider(
+						label='Presence Penalty',
+						min_value=0.0,
+						max_value=2.0,
+						key='presense_penalty',
+						step=0.05,
+						help=cfg.PRESENCE_PENALTY
+					)
 					presense_penalty = st.session_state[ 'presense_penalty' ]
 				
 				with prob_c4:
-					st.slider( label='Frequency Penalty', min_value=0.0, max_value=2.0,
-						key='frequency_penalty', step=0.05, help=cfg.FREQUENCY_PENALTY )
+					st.slider(
+						label='Frequency Penalty',
+						min_value=0.0,
+						max_value=2.0,
+						key='frequency_penalty',
+						step=0.05,
+						help=cfg.FREQUENCY_PENALTY
+					)
 					frequency_penalty = st.session_state[ 'frequency_penalty' ]
 				
-				if st.button( label='Reset', key='doc_probability_controls_reset',
-						width='stretch' ):
-					for key in [ 'frequency_penalty', 'presense_penalty',
-							'temperature', 'repeat_penalty', 'repeat_window' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
+				st.button(
+					label='Reset',
+					key='doc_probability_controls_reset',
+					width='stretch',
+					on_click=request_docqna_reset,
+					args=('doc_probability_controls_reset',)
+				)
 			
+			# ------------------------------------------------------------------
+			# Context Controls
+			# ------------------------------------------------------------------
 			with st.expander( label='Context Controls', icon='🎛️', expanded=False ):
-				ctx_c1, ctx_c2, ctx_c3, ctx_c4 = st.columns( [ 0.25, 0.25, 0.25, 0.25 ],
-					border=True, gap='medium' )
+				ctx_c1, ctx_c2, ctx_c3, ctx_c4 = st.columns(
+					[ 0.25, 0.25, 0.25, 0.25 ],
+					border=True,
+					gap='medium'
+				)
 				
 				with ctx_c1:
-					st.slider( label='Context Window', min_value=0, max_value=8192,
-						key='context_window', step=512, help=cfg.CONTEXT_WINDOW )
+					st.slider(
+						label='Context Window',
+						min_value=0,
+						max_value=8192,
+						key='context_window',
+						step=512,
+						help=cfg.CONTEXT_WINDOW
+					)
 					context_window = st.session_state[ 'context_window' ]
 				
 				with ctx_c2:
-					st.slider( label='CPU Threads', min_value=0, max_value=cfg.CORES,
-						key='cpu_threads', step=1, help=cfg.CPU_CORES )
+					st.slider(
+						label='CPU Threads',
+						min_value=0,
+						max_value=cfg.CORES,
+						key='cpu_threads',
+						step=1,
+						help=cfg.CPU_CORES
+					)
 					cpu_threads = st.session_state[ 'cpu_threads' ]
 				
 				with ctx_c3:
-					st.slider( label='Max Tokens', min_value=0, max_value=4096, step=128,
-						key='max_tokens', help=cfg.MAX_TOKENS )
+					st.slider(
+						label='Max Tokens',
+						min_value=0,
+						max_value=4096,
+						step=128,
+						key='max_tokens',
+						help=cfg.MAX_TOKENS
+					)
 					max_tokens = st.session_state[ 'max_tokens' ]
 				
 				with ctx_c4:
-					st.slider( label='Random Seed', min_value=0, max_value=4096, step=1,
-						key='random_seed', help=cfg.SEED )
+					st.slider(
+						label='Random Seed',
+						min_value=0,
+						max_value=4096,
+						step=1,
+						key='random_seed',
+						help=cfg.SEED
+					)
 				
-				if st.button( label='Reset', key='doc_context_controls_reset', width='stretch' ):
-					for key in [ 'random_seed', 'max_tokens', 'cpu_threads', 'context_window' ]:
-						if key in st.session_state:
-							del st.session_state[ key ]
-					
-					st.rerun( )
-		
+				st.button(
+					label='Reset',
+					key='doc_context_controls_reset',
+					width='stretch',
+					on_click=request_docqna_reset,
+					args=('doc_context_controls_reset',)
+				)
+	
 		# ------------------------------------------------------------------
 		# Expander — System Instructions
 		# ------------------------------------------------------------------
 		with st.expander( label='System Instructions', icon='🖥️', expanded=False, width='stretch' ):
-			in_left, in_right = st.columns( [ 0.8, 0.2 ] )
-			prompt_names = fetch_prompt_names( cfg.DB_PATH )
-			if not prompt_names:
-				prompt_names = [ '' ]
-			
-			with in_left:
-				st.text_area( label='Enter Text', height=120, width='stretch',
-					help=cfg.SYSTEM_INSTRUCTIONS, key='system_instructions' )
-			
-			def _on_doc_template_change( ) -> None:
-				name = st.session_state.get( 'instructions' )
-				if name and name != 'No Templates Found':
-					text = fetch_prompt_text( cfg.DB_PATH, name )
-					if text is not None:
-						st.session_state[ 'system_instructions' ] = text
-						st.session_state[ 'active_prompt_caption' ] = name
-			
-			with in_right:
-				st.selectbox( label='Use Template', options=prompt_names, index=None,
-					key='instructions', on_change=_on_doc_template_change )
-			
-			def _on_doc_clear( ) -> None:
-				st.session_state[ 'system_instructions' ] = ''
-				st.session_state[ 'instructions' ] = ''
-				st.session_state[ 'active_prompt_caption' ] = ''
-			
-			def _on_doc_convert_system_instructions( ) -> None:
-				text = st.session_state.get( 'system_instructions', '' )
-				if not isinstance( text, str ) or not text.strip( ):
-					return
-				
-				src = text.strip( )
-				if cfg.XML_BLOCK_PATTERN.search( src ):
-					converted = convert_xml( src )
-				else:
-					converted = convert_markdown( src )
-				
-				st.session_state[ 'system_instructions' ] = converted
-			
-			btn_c1, btn_c2 = st.columns( [ 0.8, 0.2 ] )
-			with btn_c1:
-				st.button( label='Clear Instructions', width='stretch',
-					on_click=_on_doc_clear )
-			
-			with btn_c2:
-				st.button( label='XML <-> Markdown', width='stretch',
-					on_click=_on_doc_convert_system_instructions )
+			render_system_instructions(
+				prefix='docqna',
+				include_apply_preset=False,
+				include_preview=False
+			)
 		
 		# ------------------------------------------------------------------
 		# Document Selection UI
 		# ------------------------------------------------------------------
-		with st.expander( label='Document Loader', icon='📥', expanded=False,
-				width='stretch' ):
+		with st.expander( label='Document Loader', icon='📥', expanded=False, width='stretch' ):
+			# ------------------------------------------------------------------
+			# Document loader pending-action processing.
+			#
+			# Important:
+			# ---------
+			# active_docs is owned by the multiselect widget below. Any reset/unload
+			# of active_docs must happen before that widget is instantiated.
+			# ------------------------------------------------------------------
+			pending_doc_loader_action = st.session_state.pop( 'pending_doc_loader_action', None )
+			
+			if pending_doc_loader_action == 'unload':
+				st.session_state[ 'uploaded' ] = [ ]
+				st.session_state[ 'active_docs' ] = [ ]
+				st.session_state[ 'doc_bytes' ] = { }
+				st.session_state[ 'docqna_inventory_rows' ] = [ ]
+				st.session_state[ 'docqna_fingerprint' ] = ''
+				st.session_state[ 'docqna_chunk_count' ] = 0
+				st.session_state[ 'docqna_fallback_rows' ] = [ ]
+				st.session_state[ 'docqna_last_retrieval' ] = [ ]
+				st.session_state[ 'docqna_vec_ready' ] = False
+			
+			def request_document_unload( ) -> None:
+				"""
+				Purpose:
+				--------
+				Request that active uploaded documents be unloaded on the next safe script pass.
+		
+				Parameters:
+				-----------
+				None
+		
+				Returns:
+				--------
+				None
+				"""
+				st.session_state[ 'pending_doc_loader_action' ] = 'unload'
+			
+			def render_pdf_preview( file_bytes: bytes, preview_name: str ) -> None:
+				"""
+				Purpose:
+				--------
+				Render a PDF preview using st.pdf when available, otherwise fall back to a
+				base64 iframe and, if needed, extracted text.
+		
+				Parameters:
+				-----------
+				file_bytes : bytes
+					PDF file bytes.
+		
+				preview_name : str
+					Display name for the active PDF.
+		
+				Returns:
+				--------
+				None
+				"""
+				if not file_bytes:
+					st.info( 'PDF preview unavailable.' )
+					return
+				
+				try:
+					if hasattr( st, 'pdf' ):
+						st.pdf( file_bytes, height=420 )
+						return
+				except Exception:
+					pass
+				
+				try:
+					encoded_pdf = base64.b64encode( file_bytes ).decode( 'utf-8' )
+					pdf_html = (
+							f'<iframe src="data:application/pdf;base64,{encoded_pdf}" '
+							f'width="100%" height="420" type="application/pdf"></iframe>'
+					)
+					st.markdown( pdf_html, unsafe_allow_html=True )
+					return
+				except Exception:
+					pass
+				
+				preview_text = extract_text( file_bytes, preview_name )
+				if preview_text:
+					st.text_area(
+						label=f'Preview: {preview_name}',
+						value=preview_text[ :4000 ],
+						height=420,
+						disabled=True,
+						key='doc_loader_pdf_text_fallback'
+					)
+				else:
+					st.info( 'PDF preview unavailable.' )
+			
 			doc_left, doc_right = st.columns( [ 0.5, 0.5 ], gap='medium', border=True )
+			
 			with doc_left:
-				st.radio( label='Document Source', options=[ 'uploadlocal' ],
-					index=0, horizontal=True, key='doc_source' )
+				st.radio( label='Document Source', options=[ 'uploadlocal' ], index=0,
+					horizontal=True, key='doc_source' )
 				
 				uploaded = st.file_uploader( label='Upload document(s) (PDF, TXT, DOCX)',
 					type=[ 'pdf', 'txt', 'docx' ], accept_multiple_files=True,
-					label_visibility='visible' )
+					label_visibility='visible', key='doc_loader_uploader' )
 				
 				if uploaded is not None and isinstance( uploaded, list ) and len( uploaded ) > 0:
-					st.session_state.uploaded = uploaded
-					names: List[ str ] = [ f.name for f in uploaded if getattr( f, 'name', None ) ]
-					st.session_state.active_docs = names
+					st.session_state[ 'uploaded' ] = uploaded
+					
+					names: List[ str ] = [ str( f.name ) for f in uploaded if getattr( f, 'name', None ) ]
+					
 					if 'doc_bytes' not in st.session_state or not isinstance(
-							st.session_state.doc_bytes, dict ):
-						st.session_state.doc_bytes = { }
+							st.session_state.get( 'doc_bytes' ), dict ):
+						st.session_state[ 'doc_bytes' ] = { }
 					
 					for f in uploaded:
 						try:
-							if getattr( f, 'name', None ):
-								st.session_state.doc_bytes[ f.name ] = f.getvalue( )
+							file_name = str( getattr( f, 'name', '' ) or '' ).strip( )
+							if file_name:
+								st.session_state[ 'doc_bytes' ][ file_name ] = f.getvalue( )
 						except Exception:
 							continue
 					
+					if 'active_docs' not in st.session_state:
+						st.session_state[ 'active_docs' ] = names
+					else:
+						current_active_docs = st.session_state.get( 'active_docs', [ ] )
+						if not isinstance( current_active_docs, list ) or len( current_active_docs ) == 0:
+							st.session_state[ 'active_docs' ] = names
+						else:
+							st.session_state[ 'active_docs' ] = [ name for name in current_active_docs
+							                                      if name in names ] or names
+					
 					st.session_state[ 'docqna_inventory_rows' ] = build_docqna_inventory( )
+				
 				else:
 					st.info( 'Load a document.' )
 				
-				if st.session_state.get( 'active_docs' ):
-					st.multiselect( label='Active Documents',
-						options=[ f.name for f in st.session_state.get( 'uploaded', [ ] ) ],
-						default=st.session_state.get( 'active_docs', [ ] ),
-						key='active_docs' )
+				uploaded_names = [ str( f.name ) for f in st.session_state.get( 'uploaded', [ ] )
+						if getattr( f, 'name', None ) ]
 				
-				unload = st.button( label='Unload Document(s)', width='stretch' )
-				if unload:
-					st.session_state.uploaded = [ ]
-					st.session_state.active_docs = [ ]
-					st.session_state.doc_bytes = { }
-					st.session_state[ 'docqna_inventory_rows' ] = [ ]
-					st.session_state[ 'docqna_fingerprint' ] = ''
-					st.session_state[ 'docqna_chunk_count' ] = 0
-					st.session_state[ 'docqna_fallback_rows' ] = [ ]
-					st.session_state[ 'docqna_last_retrieval' ] = [ ]
-					st.rerun( )
+				if uploaded_names:
+					active_default = st.session_state.get( 'active_docs', [ ] )
+					
+					if not isinstance( active_default, list ):
+						active_default = [ ]
+					
+					active_default = [ name for name in active_default if name in uploaded_names ]
+					
+					st.multiselect( label='Active Documents', options=uploaded_names,
+						default=active_default, key='active_docs' )
+				
+				st.button( label='Unload Document(s)', width='stretch',
+					key='doc_loader_unload_documents', on_click=request_document_unload )
 				
 				if bool( st.session_state.get( 'show_docqna_diagnostics', False ) ):
-					st.caption(
-						f'Chunk Size: {int( st.session_state.get( 'retrieval_chunk_size', 1200 ) )} '
-						f'| Chunk Overlap: {int( st.session_state.get( 'retrieval_chunk_overlap', 200 ) )} '
-						f'| Index Ready: {bool( st.session_state.get( 'docqna_vec_ready', False ) )} '
-						f'| Chunk Count: {int( st.session_state.get( 'docqna_chunk_count', 0 ) )}' )
+					retrieval_chunk_size = int( st.session_state.get( 'retrieval_chunk_size', 1200 ) )
+					retrieval_chunk_overlap = int( st.session_state.get( 'retrieval_chunk_overlap', 200 ) )
+					docqna_vec_ready = bool( st.session_state.get( 'docqna_vec_ready', False ) )
+					docqna_chunk_count = int( st.session_state.get( 'docqna_chunk_count', 0 ) )
+					
+					st.caption( f'Chunk Size: {retrieval_chunk_size} '
+						f'| Chunk Overlap: {retrieval_chunk_overlap} '
+						f'| Index Ready: {docqna_vec_ready} '
+						f'| Chunk Count: {docqna_chunk_count}' )
 			
 			with doc_right:
-				if st.session_state.get( 'active_docs' ):
-					preview_name = st.session_state.active_docs[ 0 ]
-					file_bytes = st.session_state.doc_bytes.get( preview_name )
-					if file_bytes and str( preview_name ).lower( ).endswith( '.pdf' ):
-						st.pdf( file_bytes, height=420 )
+				active_docs = st.session_state.get( 'active_docs', [ ] )
+				doc_bytes = st.session_state.get( 'doc_bytes', { } )
+				
+				if isinstance( active_docs, list ) and len( active_docs ) > 0:
+					preview_name = str( active_docs[ 0 ] )
+					file_bytes = doc_bytes.get( preview_name, b'' )
+					
+					if file_bytes and preview_name.lower( ).endswith( '.pdf' ):
+						render_pdf_preview( file_bytes, preview_name )
+					
 					elif file_bytes:
 						preview_text = extract_text( file_bytes, preview_name )
 						st.text_area( label=f'Preview: {preview_name}', value=preview_text[ :4000 ],
-							height=420, disabled=True )
+							height=420, disabled=True, key='doc_loader_text_preview' )
+					
 					else:
 						st.info( 'Document loaded but preview unavailable.' )
+				
 				else:
 					st.info( 'No document loaded.' )
 			
@@ -4299,19 +8364,578 @@ elif mode == 'Document Q&A':
 							
 							st.markdown( f'**{idx}. {doc_name}**' )
 							st.caption( f'Score / Distance: {score_value}' )
-							st.text_area(
-								label=f'Chunk {idx}',
-								value=chunk_text_value,
-								height=140,
-								disabled=True,
-								key=f'doc_hit_{idx}'
-							)
+							st.text_area( label=f'Chunk {idx}', value=chunk_text_value,
+								height=140, disabled=True, key=f'doc_hit_{idx}' )
 		
 		if st.button( '🧹 Clear Chat', key='doc_clear_chat' ):
 			clear_history( )
 			st.session_state.messages = [ ]
 			st.rerun( )
+
+# ==============================================================================
+# IMAGES API
+# ==============================================================================
+elif mode == get_mode_constant( 'IMAGE_MODE', 'Images API' ):
+	
+	def run_image_mode_adapter( image_bytes: bytes, image_name: str, prompt: str ) -> str:
+		"""
+			Purpose:
+			--------
+			Run an optional image-analysis adapter when one has been wired into app.py.
+			The function fails closed when the selected model or runtime does not support
+			image analysis.
+
+			Parameters:
+			-----------
+			image_bytes : bytes
+				Uploaded image bytes.
+
+			image_name : str
+				Uploaded image filename.
+
+			prompt : str
+				User prompt for image analysis.
+
+			Returns:
+			--------
+			str
+				Image analysis response text.
+		"""
+		try:
+			if not model_supports_capability( 'image_mode' ):
+				return get_capability_status_message( 'image_mode' )
 			
+			runtime_status = get_runtime_multimodal_status( )
+			if not bool( runtime_status.get( 'image_runtime_available', False ) ):
+				return get_capability_status_message( 'image_mode' )
+			
+			adapter = globals( ).get( 'analyze_image_with_model', None )
+			if not callable( adapter ):
+				return (
+						'Image Mode is configured for this model, but no image adapter named '
+						'analyze_image_with_model is wired into app.py yet.')
+			
+			try:
+				result = adapter(
+					model_path=get_selected_model_path( ),
+					model_name=get_selected_model_name( ),
+					image_bytes=image_bytes,
+					image_name=image_name,
+					prompt=prompt
+				)
+			except TypeError:
+				result = adapter( image_bytes, prompt )
+			
+			if result is None:
+				return ''
+			
+			return str( result )
+		except Exception as e:
+			return f'Image analysis failed: {e}'
+	
+	def build_image_context_text( image_name: str, prompt: str, response: str ) -> str:
+		"""
+			Purpose:
+			--------
+			Build reusable image context text for Text Generation, Document Q&A, or Prompt
+			Engineering workflows.
+
+			Parameters:
+			-----------
+			image_name : str
+				Uploaded image filename.
+
+			prompt : str
+				User image-analysis prompt.
+
+			response : str
+				Image-analysis response or runtime status.
+
+			Returns:
+			--------
+			str
+				Reusable image context text.
+		"""
+		name_value = str( image_name or '' ).strip( )
+		prompt_value = str( prompt or '' ).strip( )
+		response_value = str( response or '' ).strip( )
+		
+		parts: List[ str ] = [ ]
+		if name_value:
+			parts.append( f'Image Source: {name_value}' )
+		if prompt_value:
+			parts.append( f'Image Prompt: {prompt_value}' )
+		if response_value:
+			parts.append( f'Image Analysis:\n{response_value}' )
+		
+		return '\n\n'.join( parts ).strip( )
+	
+	left, center, right = st.columns( [ 0.05, 0.90, 0.05 ] )
+	with center:
+		image_help = get_mode_definition_text(
+			get_mode_constant( 'IMAGE_MODE', 'Images API' ) )
+		
+		st.subheader( '🖼️ Images API', help=image_help )
+		st.divider( )
+		
+		capabilities = get_active_model_capabilities( )
+		runtime_status = get_runtime_multimodal_status( )
+		
+		status_c1, status_c2, status_c3 = st.columns( [ 0.34, 0.33, 0.33 ], border=True )
+		with status_c1:
+			st.metric( 'Selected Model', get_selected_model_name( ) )
+		with status_c2:
+			st.metric( 'Base Model', str( capabilities.get( 'base_model', '' ) or '' ) )
+		with status_c3:
+			runtime_label = 'Available' if bool(
+				runtime_status.get( 'image_runtime_available', False ) ) else 'Text Only'
+			st.metric( 'Image Runtime', runtime_label )
+		
+		if not model_supports_capability( 'image_mode' ):
+			st.warning( get_capability_status_message( 'image_mode' ) )
+		
+		elif not bool( runtime_status.get( 'image_runtime_available', False ) ):
+			st.info( get_capability_status_message( 'image_mode' ) )
+		
+		with st.expander( label='Image Input', icon='📥', expanded=True ):
+			img_c1, img_c2 = st.columns( [ 0.45, 0.55 ], gap='medium' )
+			
+			with img_c1:
+				image_file = st.file_uploader(
+					label='Upload Image',
+					type=[ 'png', 'jpg', 'jpeg', 'webp', 'bmp' ],
+					accept_multiple_files=False,
+					key='image_file_uploader'
+				)
+				
+				if image_file is not None:
+					try:
+						image_bytes = image_file.getvalue( )
+						image_name = str( getattr( image_file, 'name', '' ) or '' )
+						st.session_state[ 'image_uploaded_name' ] = image_name
+						st.image( image_bytes, caption=image_name, use_container_width=True )
+						st.caption( f'Image Size: {len( image_bytes ):,} bytes' )
+					except Exception as e:
+						image_bytes = b''
+						image_name = ''
+						st.session_state[ 'image_status' ] = f'Image preview failed: {e}'
+						st.error( st.session_state[ 'image_status' ] )
+				else:
+					image_bytes = b''
+					image_name = ''
+			
+			with img_c2:
+				st.text_area(
+					label='Image Prompt',
+					height=180,
+					key='image_prompt',
+					placeholder='Describe what you want the model to analyze in the image.'
+				)
+				
+				st.toggle(
+					label='Send Image Context to Text Generation',
+					key='image_send_to_text',
+					value=bool( st.session_state.get( 'image_send_to_text', False ) )
+				)
+				
+				st.caption(
+					'Image analysis requires both a model that advertises image capability '
+					'and a runtime adapter that can pass image bytes to the local model.' )
+		
+		with st.expander( label='Image Analysis', icon='🔎', expanded=True ):
+			run_disabled = image_file is None
+			if st.button( 'Analyze Image', key='image_analyze_button',
+					width='stretch', disabled=run_disabled ):
+				prompt_value = str( st.session_state.get( 'image_prompt', '' ) or '' ).strip( )
+				if not prompt_value:
+					prompt_value = (
+							'Analyze the uploaded image and provide a concise, structured '
+							'description of the visible content.')
+				
+				response = run_image_mode_adapter(
+					image_bytes=image_bytes,
+					image_name=image_name,
+					prompt=prompt_value
+				)
+				
+				st.session_state[ 'image_response' ] = response
+				st.session_state[ 'image_status' ] = 'Image analysis request completed.'
+				st.session_state[ 'image_context_buffer' ] = build_image_context_text(
+					image_name=image_name,
+					prompt=prompt_value,
+					response=response
+				)
+				
+				if bool( st.session_state.get( 'image_send_to_text', False ) ):
+					existing_docs = st.session_state.get( 'basic_docs', [ ] )
+					if not isinstance( existing_docs, list ):
+						existing_docs = [ ]
+					
+					context_text = st.session_state.get( 'image_context_buffer', '' )
+					if context_text:
+						existing_docs.append( context_text )
+						st.session_state[ 'basic_docs' ] = existing_docs
+						st.session_state[ 'use_document_context' ] = True
+			
+			response_value = str( st.session_state.get( 'image_response', '' ) or '' )
+			if response_value:
+				st.markdown( '### Image Response' )
+				st.markdown( response_value )
+			
+			status_value = str( st.session_state.get( 'image_status', '' ) or '' )
+			if status_value:
+				st.caption( status_value )
+		
+		with st.expander( label='Actions', icon='🔀', expanded=False ):
+			action_c1, action_c2, action_c3 = st.columns( [ 0.34, 0.33, 0.33 ] )
+			
+			with action_c1:
+				if st.button( 'Send Context to Text Generation',
+						key='image_send_context_button', width='stretch' ):
+					context_text = str(
+						st.session_state.get( 'image_context_buffer', '' ) or '' ).strip( )
+					
+					if context_text:
+						existing_docs = st.session_state.get( 'basic_docs', [ ] )
+						if not isinstance( existing_docs, list ):
+							existing_docs = [ ]
+						
+						existing_docs.append( context_text )
+						st.session_state[ 'basic_docs' ] = existing_docs
+						st.session_state[ 'use_document_context' ] = True
+						st.success( 'Image context added to Text Generation context.' )
+					else:
+						st.info( 'No image context is available to send.' )
+			
+			with action_c2:
+				if st.button( 'Save as Prompt Context',
+						key='image_save_prompt_context_button', width='stretch' ):
+					context_text = str(
+						st.session_state.get( 'image_context_buffer', '' ) or '' ).strip( )
+					
+					if context_text:
+						existing_docs = st.session_state.get( 'basic_docs', [ ] )
+						if not isinstance( existing_docs, list ):
+							existing_docs = [ ]
+						
+						existing_docs.append( context_text )
+						st.session_state[ 'basic_docs' ] = existing_docs
+						st.success( 'Image context saved as shared prompt context.' )
+					else:
+						st.info( 'No image context is available to save.' )
+			
+			with action_c3:
+				if st.button( 'Clear Image State',
+						key='image_clear_state_button', width='stretch' ):
+					st.session_state[ 'image_prompt' ] = ''
+					st.session_state[ 'image_uploaded_name' ] = ''
+					st.session_state[ 'image_response' ] = ''
+					st.session_state[ 'image_status' ] = ''
+					st.session_state[ 'image_context_buffer' ] = ''
+					st.session_state[ 'image_send_to_text' ] = False
+					st.rerun( )
+
+# ==============================================================================
+# AUDIO API
+# ==============================================================================
+elif mode == get_mode_constant( 'AUDIO_MODE', 'Audio API' ):
+	
+	def run_audio_mode_adapter( audio_bytes: bytes, audio_name: str, prompt: str ) -> str:
+		"""
+			Purpose:
+			--------
+			Run an optional audio-analysis adapter when one has been wired into app.py.
+			The function fails closed when the selected model or runtime does not support
+			audio transcription, translation, or audio analysis.
+
+			Parameters:
+			-----------
+			audio_bytes : bytes
+				Uploaded audio bytes.
+
+			audio_name : str
+				Uploaded audio filename.
+
+			prompt : str
+				User prompt for audio transcription or analysis.
+
+			Returns:
+			--------
+			str
+				Audio transcription, translation, analysis, or runtime status text.
+		"""
+		try:
+			if not model_supports_capability( 'audio_mode' ):
+				return get_capability_status_message( 'audio_mode' )
+			
+			runtime_status = get_runtime_multimodal_status( )
+			if not bool( runtime_status.get( 'audio_runtime_available', False ) ):
+				return get_capability_status_message( 'audio_mode' )
+			
+			adapter = globals( ).get( 'analyze_audio_with_model', None )
+			if not callable( adapter ):
+				return (
+						'Audio Mode is configured for this model, but no audio adapter named '
+						'analyze_audio_with_model is wired into app.py yet.')
+			
+			try:
+				result = adapter(
+					model_path=get_selected_model_path( ),
+					model_name=get_selected_model_name( ),
+					audio_bytes=audio_bytes,
+					audio_name=audio_name,
+					prompt=prompt
+				)
+			except TypeError:
+				result = adapter( audio_bytes, prompt )
+			
+			if result is None:
+				return ''
+			
+			return str( result )
+		except Exception as e:
+			return f'Audio analysis failed: {e}'
+	
+	def build_audio_context_text( audio_name: str, prompt: str, response: str ) -> str:
+		"""
+			Purpose:
+			--------
+			Build reusable audio context text for Text Generation, Document Q&A, Semantic
+			Search, or Prompt Engineering workflows.
+
+			Parameters:
+			-----------
+			audio_name : str
+				Uploaded audio filename.
+
+			prompt : str
+				User audio-analysis prompt.
+
+			response : str
+				Audio transcription, translation, analysis, or runtime status.
+
+			Returns:
+			--------
+			str
+				Reusable audio context text.
+		"""
+		name_value = str( audio_name or '' ).strip( )
+		prompt_value = str( prompt or '' ).strip( )
+		response_value = str( response or '' ).strip( )
+		
+		parts: List[ str ] = [ ]
+		if name_value:
+			parts.append( f'Audio Source: {name_value}' )
+		if prompt_value:
+			parts.append( f'Audio Prompt: {prompt_value}' )
+		if response_value:
+			parts.append( f'Audio Transcript / Analysis:\n{response_value}' )
+		
+		return '\n\n'.join( parts ).strip( )
+	
+	def get_audio_mime_type( audio_name: str ) -> str:
+		"""
+			Purpose:
+			--------
+			Return a browser-friendly MIME type for Streamlit audio preview based on the
+			uploaded audio filename.
+
+			Parameters:
+			-----------
+			audio_name : str
+				Uploaded audio filename.
+
+			Returns:
+			--------
+			str
+				Audio MIME type.
+		"""
+		name_value = str( audio_name or '' ).strip( ).lower( )
+		
+		if name_value.endswith( '.mp3' ):
+			return 'audio/mpeg'
+		if name_value.endswith( '.m4a' ):
+			return 'audio/mp4'
+		if name_value.endswith( '.flac' ):
+			return 'audio/flac'
+		if name_value.endswith( '.ogg' ):
+			return 'audio/ogg'
+		if name_value.endswith( '.wav' ):
+			return 'audio/wav'
+		
+		return 'audio/wav'
+	
+	left, center, right = st.columns( [ 0.05, 0.90, 0.05 ] )
+	with center:
+		audio_help = get_mode_definition_text(
+			get_mode_constant( 'AUDIO_MODE', 'Audio API' ) )
+		
+		st.subheader( '🎧 Audio API', help=audio_help )
+		st.divider( )
+		
+		capabilities = get_active_model_capabilities( )
+		runtime_status = get_runtime_multimodal_status( )
+		
+		status_c1, status_c2, status_c3 = st.columns( [ 0.34, 0.33, 0.33 ], border=True )
+		with status_c1:
+			st.metric( 'Selected Model', get_selected_model_name( ) )
+		with status_c2:
+			st.metric( 'Base Model', str( capabilities.get( 'base_model', '' ) or '' ) )
+		with status_c3:
+			runtime_label = 'Available' if bool(
+				runtime_status.get( 'audio_runtime_available', False ) ) else 'Text Only'
+			st.metric( 'Audio Runtime', runtime_label )
+		
+		if not model_supports_capability( 'audio_mode' ):
+			st.warning( get_capability_status_message( 'audio_mode' ) )
+		
+		elif not bool( runtime_status.get( 'audio_runtime_available', False ) ):
+			st.info( get_capability_status_message( 'audio_mode' ) )
+		
+		with st.expander( label='Audio Input', icon='📥', expanded=True ):
+			audio_c1, audio_c2 = st.columns( [ 0.45, 0.55 ], gap='medium' )
+			
+			with audio_c1:
+				audio_file = st.file_uploader(
+					label='Upload Audio',
+					type=[ 'wav', 'mp3', 'm4a', 'flac', 'ogg' ],
+					accept_multiple_files=False,
+					key='audio_file_uploader'
+				)
+				
+				if audio_file is not None:
+					try:
+						audio_bytes = audio_file.getvalue( )
+						audio_name = str( getattr( audio_file, 'name', '' ) or '' )
+						audio_mime = get_audio_mime_type( audio_name )
+						st.session_state[ 'audio_uploaded_name' ] = audio_name
+						st.audio( audio_bytes, format=audio_mime )
+						st.caption( f'Audio File: {audio_name}' )
+						st.caption( f'Audio Size: {len( audio_bytes ):,} bytes' )
+					except Exception as e:
+						audio_bytes = b''
+						audio_name = ''
+						st.session_state[ 'audio_status' ] = f'Audio preview failed: {e}'
+						st.error( st.session_state[ 'audio_status' ] )
+				else:
+					audio_bytes = b''
+					audio_name = ''
+			
+			with audio_c2:
+				st.text_area(
+					label='Audio Prompt',
+					height=180,
+					key='audio_prompt',
+					placeholder=(
+							'Transcribe this audio, summarize the speaker’s key points, '
+							'or translate the spoken content into English.')
+				)
+				
+				st.toggle(
+					label='Send Audio Context to Text Generation',
+					key='audio_send_to_text',
+					value=bool( st.session_state.get( 'audio_send_to_text', False ) )
+				)
+				
+				st.caption(
+					'Audio analysis requires both a model that advertises audio capability '
+					'and a runtime adapter that can pass audio bytes to the local model.' )
+		
+		with st.expander( label='Audio Analysis', icon='🔎', expanded=True ):
+			run_disabled = audio_file is None
+			if st.button( 'Analyze Audio', key='audio_analyze_button',
+					width='stretch', disabled=run_disabled ):
+				prompt_value = str( st.session_state.get( 'audio_prompt', '' ) or '' ).strip( )
+				if not prompt_value:
+					prompt_value = (
+							'Transcribe the uploaded audio and provide a concise summary '
+							'of the spoken content.')
+				
+				response = run_audio_mode_adapter(
+					audio_bytes=audio_bytes,
+					audio_name=audio_name,
+					prompt=prompt_value
+				)
+				
+				st.session_state[ 'audio_response' ] = response
+				st.session_state[ 'audio_transcript' ] = response
+				st.session_state[ 'audio_status' ] = 'Audio analysis request completed.'
+				st.session_state[ 'audio_context_buffer' ] = build_audio_context_text(
+					audio_name=audio_name,
+					prompt=prompt_value,
+					response=response
+				)
+				
+				if bool( st.session_state.get( 'audio_send_to_text', False ) ):
+					existing_docs = st.session_state.get( 'basic_docs', [ ] )
+					if not isinstance( existing_docs, list ):
+						existing_docs = [ ]
+					
+					context_text = st.session_state.get( 'audio_context_buffer', '' )
+					if context_text:
+						existing_docs.append( context_text )
+						st.session_state[ 'basic_docs' ] = existing_docs
+						st.session_state[ 'use_document_context' ] = True
+			
+			response_value = str( st.session_state.get( 'audio_response', '' ) or '' )
+			if response_value:
+				st.markdown( '### Audio Response' )
+				st.markdown( response_value )
+			
+			status_value = str( st.session_state.get( 'audio_status', '' ) or '' )
+			if status_value:
+				st.caption( status_value )
+		
+		with st.expander( label='Actions', icon='🔀', expanded=False ):
+			action_c1, action_c2, action_c3 = st.columns( [ 0.34, 0.33, 0.33 ] )
+			
+			with action_c1:
+				if st.button( 'Send Context to Text Generation',
+						key='audio_send_context_button', width='stretch' ):
+					context_text = str(
+						st.session_state.get( 'audio_context_buffer', '' ) or '' ).strip( )
+					
+					if context_text:
+						existing_docs = st.session_state.get( 'basic_docs', [ ] )
+						if not isinstance( existing_docs, list ):
+							existing_docs = [ ]
+						
+						existing_docs.append( context_text )
+						st.session_state[ 'basic_docs' ] = existing_docs
+						st.session_state[ 'use_document_context' ] = True
+						st.success( 'Audio context added to Text Generation context.' )
+					else:
+						st.info( 'No audio context is available to send.' )
+			
+			with action_c2:
+				if st.button( 'Save as Prompt Context',
+						key='audio_save_prompt_context_button', width='stretch' ):
+					context_text = str(
+						st.session_state.get( 'audio_context_buffer', '' ) or '' ).strip( )
+					
+					if context_text:
+						existing_docs = st.session_state.get( 'basic_docs', [ ] )
+						if not isinstance( existing_docs, list ):
+							existing_docs = [ ]
+						
+						existing_docs.append( context_text )
+						st.session_state[ 'basic_docs' ] = existing_docs
+						st.success( 'Audio context saved as shared prompt context.' )
+					else:
+						st.info( 'No audio context is available to save.' )
+			
+			with action_c3:
+				if st.button( 'Clear Audio State',
+						key='audio_clear_state_button', width='stretch' ):
+					st.session_state[ 'audio_prompt' ] = ''
+					st.session_state[ 'audio_uploaded_name' ] = ''
+					st.session_state[ 'audio_response' ] = ''
+					st.session_state[ 'audio_status' ] = ''
+					st.session_state[ 'audio_transcript' ] = ''
+					st.session_state[ 'audio_context_buffer' ] = ''
+					st.session_state[ 'audio_send_to_text' ] = False
+					st.rerun( )
+					
 # ==============================================================================
 # SEMANTIC SEARCH
 # ==============================================================================
@@ -5362,7 +9986,7 @@ st.markdown(
 		border-top: 1px solid #2a2a2a;
 		padding: 10px 16px;
 		font-size: 0.80rem;
-		color: #35618c;
+		color: #5292f7;
 		z-index: 1000;
 	}
 	.boo-status-inner {
@@ -5379,12 +10003,21 @@ st.markdown(
 # ======================================================================================
 
 right_parts: List[ str ] = [ ]
-model = 'Bro'
+model = str( st.session_state.get( 'selected_model_name',
+		get_default_model_name( ) ) or get_default_model_name( ) )
 
 mode_value = mode if mode is not None else st.session_state.get( 'mode' )
 if mode_value:
 	right_parts.append( f'Mode: {mode_value}' )
-
+	
+selected_model_path = str( st.session_state.get( 'selected_model_path', '' ) or '' )
+if selected_model_path and Path( selected_model_path ).exists( ):
+	right_parts.append( 'Model File: Available' )
+elif selected_model_path:
+	right_parts.append( 'Model File: Missing' )
+else:
+	right_parts.append( 'Model File: Not Configured' )
+	
 temperature = st.session_state.get( 'temperature' )
 top_p = st.session_state.get( 'top_percent' )
 top_k = st.session_state.get( 'top_k' )

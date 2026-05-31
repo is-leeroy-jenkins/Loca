@@ -1,4 +1,5 @@
 llama-cpp-python>=0.3.16
+python-docx
 sentence-transformers==2.7.0
 torch>=2.4,<2.7
 transformers>=4.41,<5
@@ -13,3 +14,4 @@ sqlite-vec==0.1.3
 streamlit
 streamlit-extras
 streamlit-pdf
+
