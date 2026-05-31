@@ -37,7 +37,7 @@ base model metadata, description, and allowed application modes are declared.
 
 ## 🕸️ Streamlit Web
 
-[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit\&logoColor=white)](https://bro-py.streamlit.app/)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit\&logoColor=white)](https://localoca.streamlit.app/)
 
 ![](https://github.com/is-leeroy-jenkins/LocaLlama/blob/main/resources/images/Loca-streamlit.gif)
 
