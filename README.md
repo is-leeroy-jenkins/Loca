@@ -31,7 +31,7 @@ base model metadata, description, and allowed application modes are declared.
 
 ## 🎥 Demo
 
-![](https://github.com/is-leeroy-jenkins/LocaLlama/blob/main/resources/images/loca-demo.gif)
+![](https://github.com/is-leeroy-jenkins/Loca/blob/main/resources/images/loca-demo.gif)
 
 ## 🕸️ Streamlit Web
 
