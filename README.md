@@ -6,8 +6,6 @@
   <a href="#-key-features">Features</a> ·
   <a href="#-application-modes">Modes</a> ·
   <a href="#-supported-models">Models</a> ·
-  <a href="#-architecture">Architecture</a> ·
-  <a href="#-repository-structure">Structure</a> ·
   <a href="#-installation--setup">Install</a> ·
   <a href="#-configuration">Configuration</a> ·
   <a href="#-text-generation">Text</a> ·
