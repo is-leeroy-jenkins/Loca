@@ -641,7 +641,7 @@ Use
 
 ## 📝 MIT License 
 
-Loca is published under the [MIT General Public License v3]([https://github.com/is-leeroy-jenkins/Chonky/blob/main/LICENSE.txt](https://github.com/is-leeroy-jenkins/Loca/blob/main/LICENSE.txt))
+Loca is published under the [MIT General Public License v3](https://github.com/is-leeroy-jenkins/Loca/blob/main/LICENSE.txt)
 
 ![License-MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
