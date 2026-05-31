@@ -643,8 +643,5 @@ Use
 This application is provided for personal, research, and open-source use. Refer to the project and
 model repositories for application and model-specific licensing terms.
 
-## 📜 License
 
-This application is provided for personal, research, and open-source use. Refer to the project and
-model repositories for application and model-specific licensing terms.
 
