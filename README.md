@@ -311,37 +311,6 @@ selectors in the sidebar.
 
 LocaLlama reads runtime configuration from `config.py` and Streamlit session state.
 
-| Configuration Item             | Purpose                                                                                            |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `cfg.APP_TITLE`                | Streamlit browser/page title.                                                                      |
-| `cfg.APP_SUBTITLE`             | Startup caption displayed under page configuration.                                                |
-| `cfg.BASE_DIR`                 | Application base directory.                                                                        |
-| `cfg.DB_PATH`                  | SQLite database path used for chat, prompts, embeddings, documents, chunks, and images.            |
-| `cfg.DEFAULT_CTX`              | Default model context window.                                                                      |
-| `cfg.CORES`                    | Maximum CPU thread count exposed in the UI.                                                        |
-| `cfg.FAVICON`                  | Streamlit page icon.                                                                               |
-| `cfg.LOGO`                     | Default application logo.                                                                          |
-| `cfg.BRO_LOGO`                 | Bro model logo.                                                                                    |
-| `cfg.GIPITY_LOGO`              | Gipity model logo.                                                                                 |
-| `cfg.BUDDY_LOGO`               | Buddy model logo.                                                                                  |
-| `cfg.BOO_LOGO`                 | Boo model logo.                                                                                    |
-| `cfg.JIMI_LOGO`                | Jimi model logo.                                                                                   |
-| `cfg.LEEROY_LOGO`              | Leeroy model logo.                                                                                 |
-| `cfg.NISTY_LOGO`               | Nisty model logo.                                                                                  |
-| `cfg.TEXT_MODE`                | Text Generation mode label.                                                                        |
-| `cfg.IMAGE_MODE`               | Images API mode label.                                                                             |
-| `cfg.AUDIO_MODE`               | Audio API mode label.                                                                              |
-| `cfg.DOCQNA_MODE`              | Document Q&A mode label.                                                                           |
-| `cfg.SEMANTIC_MODE`            | Semantic Search mode label.                                                                        |
-| `cfg.PROMPT_MODE`              | Prompt Engineering mode label.                                                                     |
-| `cfg.DATA_MODE`                | Data Management mode label.                                                                        |
-| `cfg.MODES`                    | Application mode list.                                                                             |
-| `cfg.MODEL_REGISTRY`           | Assistant model metadata, model paths, logos, base model names, descriptions, and supported modes. |
-| `cfg.AUDIO_API`                | Help text for Audio API mode.                                                                      |
-| `cfg.IMAGES_API`               | Help text for Images API mode.                                                                     |
-| `cfg.XML_BLOCK_PATTERN`        | XML-like prompt delimiter pattern used by conversion utilities.                                    |
-| `cfg.MARKDOWN_HEADING_PATTERN` | Markdown heading pattern used by prompt conversion utilities.                                      |
-| `cfg.BLUE_DIVIDER`             | Shared divider styling.                                                                            |
 
 ### Optional Runtime Capability Flags
 
@@ -349,7 +318,7 @@ Image and audio modes are model-gated and runtime-gated. The mode may be visible
 but actual multimodal inference requires an image/audio-capable local adapter to be wired into
 `app.py`.
 
-Optional config flags may be added later:
+Config flags:
 
 ```python
 IMAGE_RUNTIME_AVAILABLE = True
