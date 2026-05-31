@@ -1,6 +1,6 @@
 ###### LocaLlama
 
-![](https://github.com/is-leeroy-jenkins/LocaLlama/blob/main/resources/images/loca_project.png)
+![](https://github.com/is-leeroy-jenkins/Loca/blob/main/resources/images/loca-llama_project.png)
 
 <p align="center">
   <a href="#-key-features">Features</a> ·
