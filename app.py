@@ -7039,82 +7039,60 @@ if mode == 'Text Generation':
 					[ 0.25, 0.25, 0.25, 0.25 ], border=True, gap='medium' )
 				
 				with advanced_c1:
-					st.toggle(
-						label='Enable Thinking',
+					st.toggle( label='Enable Thinking',
 						value=bool( st.session_state.get( 'thinking_mode_enabled', False ) ),
 						key='thinking_mode_enabled',
-						disabled=not model_supports_capability( 'thinking' )
-					)
+						disabled=not model_supports_capability( 'thinking' ) )
 				
 				with advanced_c2:
-					st.selectbox(
-						label='Thinking Effort',
-						options=[ 'Low', 'Medium', 'High' ],
-						key='thinking_effort',
-						disabled=not model_supports_capability( 'thinking' )
-					)
+					st.selectbox( label='Thinking Effort', options=[ 'Low', 'Medium', 'High' ],
+						key='thinking_effort', disabled=not model_supports_capability( 'thinking' ) )
 				
 				with advanced_c3:
-					st.toggle(
-						label='Reasoning Summary',
+					st.toggle( label='Reasoning Summary',
 						value=bool( st.session_state.get( 'thinking_summary_enabled', True ) ),
 						key='thinking_summary_enabled',
-						disabled=not model_supports_capability( 'thinking' )
-					)
+						disabled=not model_supports_capability( 'thinking' ) )
 				
 				with advanced_c4:
-					st.toggle(
-						label='Enable Advanced Coding',
+					st.toggle( label='Enable Advanced Coding',
 						value=bool( st.session_state.get( 'coding_mode_enabled', False ) ),
 						key='coding_mode_enabled',
-						disabled=not model_supports_capability( 'coding' )
-					)
+						disabled=not model_supports_capability( 'coding' ) )
 				
 				coding_ext_c1, coding_ext_c2 = st.columns( [ 0.5, 0.5 ], border=True, gap='medium' )
 				
 				with coding_ext_c1:
-					st.toggle(
-						label='Include Test Strategy',
+					st.toggle( label='Include Test Strategy',
 						value=bool( st.session_state.get( 'coding_test_request', False ) ),
 						key='coding_test_request',
-						disabled=not model_supports_capability( 'coding' )
-					)
+						disabled=not model_supports_capability( 'coding' ) )
 				
 				with coding_ext_c2:
-					st.toggle(
-						label='Explain Implementation',
+					st.toggle( label='Explain Implementation',
 						value=bool( st.session_state.get( 'coding_explain_request', False ) ),
 						key='coding_explain_request',
-						disabled=not model_supports_capability( 'coding' )
-					)
+						disabled=not model_supports_capability( 'coding' ) )
 				
 				st.divider( )
 				
 				function_c1, function_c2 = st.columns( [ 0.35, 0.65 ], border=True, gap='medium' )
 				
 				with function_c1:
-					st.toggle(
-						label='Enable Function Calling',
+					st.toggle( label='Enable Function Calling',
 						value=bool( st.session_state.get( 'function_call_enabled', False ) ),
 						key='function_call_enabled',
-						disabled=not model_supports_capability( 'function_calling' )
-					)
+						disabled=not model_supports_capability( 'function_calling' ) )
 					
-					st.text_area(
-						label='Function Call Prompt',
-						height=120,
-						key='function_call_prompt',
-						placeholder='Optional developer note for when the model should emit a tool call.',
-						disabled=not model_supports_capability( 'function_calling' )
-					)
+					st.text_area( label='Function Call Guidance', height=120,
+						key='function_call_guidance',
+						placeholder='Optional guidance for when the model should emit a tool call.',
+						disabled=not model_supports_capability( 'function_calling' ) )
 				
 				with function_c2:
-					st.text_area(
-						label='Function Schema JSON',
-						height=220,
+					st.text_area( label='Function Schema JSON', height=220,
 						key='function_schema_text',
-						disabled=not model_supports_capability( 'function_calling' )
-					)
+						disabled=not model_supports_capability( 'function_calling' ) )
 				
 				status_rows: List[ Dict[ str, Any ] ] = [
 						{
@@ -7164,6 +7142,7 @@ if mode == 'Text Generation':
 					st.session_state[ 'coding_explain_request' ] = False
 					st.session_state[ 'function_call_enabled' ] = False
 					st.session_state[ 'function_call_prompt' ] = ''
+					st.session_state[ 'function_call_guidance' ] = ''
 					st.session_state[ 'function_schema_text' ] = get_default_function_schema_text( )
 					st.session_state[ 'function_call_response' ] = ''
 					st.session_state[ 'function_call_result' ] = ''
