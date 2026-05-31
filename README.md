@@ -1,4 +1,4 @@
-###### LocaLlama
+###### Loca
 
 ![](https://github.com/is-leeroy-jenkins/Loca/blob/main/resources/images/loca-llama_project.png)
 
