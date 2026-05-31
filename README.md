@@ -18,7 +18,7 @@
   <a href="#-requirements">Requirements</a>
 </p>
 
-Loca is a python application for running local GGUF-based LLMS for text generation,
+Loca is a python application for running local GGUF-based LLMs for text generation,
 document-grounded retrieval, semantic search, prompt engineering, multimodal workflow staging,
 function-calling experimentation, guarded web context ingestion, and SQLite-backed data management.
 It is designed to run local language models through `llama-cpp-python` while giving analysts direct
