@@ -625,18 +625,7 @@ Use
 | Multimodal fail-closed behavior | Image and Audio modes display runtime-status messages unless actual adapters are wired.        |
 | Operational transparency        | Footer summarizes active mode and generation parameters.                                       |
 
-## 🧬 Related Applications
 
-| Application | Role                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| Leeroy      | Small instruction assistant for local dialogue and retrieval workflows.                    |
-| Bro         | Balanced local instruction and reasoning assistant.                                        |
-| Gipity      | Larger reasoning-oriented assistant with function-calling and web-context workflows.       |
-| Buddy       | Compact local assistant for lightweight text and conservative retrieval.                   |
-| Boo         | Lightweight reasoning assistant based on Phi-style local inference.                        |
-| Jimi        | Multimodal-capable local assistant for text, image, audio, coding, and thinking workflows. |
-| Nisty       | Governance/document-oriented multimodal assistant.                                         |
-| Chonky      | Text-processing, tokenization, embeddings, and vector-persistence pipeline.                |
 
 
 ## 📝 MIT License 
