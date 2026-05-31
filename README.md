@@ -643,5 +643,9 @@ Use
 This application is provided for personal, research, and open-source use. Refer to the project and
 model repositories for application and model-specific licensing terms.
 
+## 📝 License
+
+Chonky is published under the [MIT General Public License v3]([https://github.com/is-leeroy-jenkins/Chonky/blob/main/LICENSE.txt](https://github.com/is-leeroy-jenkins/Loca/blob/main/LICENSE.txt))
+![License-MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 
