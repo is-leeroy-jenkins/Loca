@@ -638,7 +638,7 @@ Use
 | Nisty       | Governance/document-oriented multimodal assistant.                                         |
 | Chonky      | Text-processing, tokenization, embeddings, and vector-persistence pipeline.                |
 
-## 📜 [MIT License](https://github.com/is-leeroy-jenkins/Loca/blob/main/LICENSE.txt)
+## 📜 MIT License [Here](https://github.com/is-leeroy-jenkins/Loca/blob/main/LICENSE.txt)
 
 This application is provided for personal, research, and open-source use. Refer to the project and
 model repositories for application and model-specific licensing terms.
