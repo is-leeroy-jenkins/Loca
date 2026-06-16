@@ -1,11 +1,11 @@
 
-site_name: Loca Llama Documentation
+site_name: Loca AI Documentation
 site_description: Documentation for the Loca AI application.
 site_author: Terry D. Eppler
 site_url: "https://is-leeroy-jenkins.github.io/Loca/"
 
 repo_url: "https://github.com/is-leeroy-jenkins/Loca.git"
-repo_name: "Loca Llama"
+repo_name: "Loca Llama AI"
 
 theme:
   name: material
