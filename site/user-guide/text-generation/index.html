@@ -1,0 +1,1945 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Loca AI application.">
+      
+      
+        <meta name="author" content="Terry D. Eppler">
+      
+      
+        <link rel="canonical" href="https://is-leeroy-jenkins.github.io/Loca/user-guide/text-generation/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../document-qna/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../img/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Text Generation - Loca AI Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/css/loca.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#text-generation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Loca AI Documentation" class="md-header__button md-logo" aria-label="Loca AI Documentation" data-md-component="logo">
+      
+  <img src="../../img/loca-llama-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Loca AI Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Text Generation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/is-leeroy-jenkins/Loca.git" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Loca Llama AI
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../development/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Development
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Loca AI Documentation" class="md-nav__button md-logo" aria-label="Loca AI Documentation" data-md-component="logo">
+      
+  <img src="../../img/loca-llama-logo.png" alt="logo">
+
+    </a>
+    Loca AI Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/is-leeroy-jenkins/Loca.git" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Loca Llama AI
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Text Generation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Text Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧱 Workflow Position
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧠 Model Selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Runtime Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧾 System Instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Task Presets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💬 Chat History
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Document Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔎 Semantic Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-basic-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Basic Chat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-coding-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Coding Task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-summarization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Summarization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Extraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#effective-prompt-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧰 Effective Prompt Construction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#missing-model-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚨 Missing Model Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Recommended Sequence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Practical Defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-api-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔗 Related API Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../document-qna/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Q&A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../semantic-search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/boogr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧱 Workflow Position
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧠 Model Selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Runtime Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧾 System Instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Task Presets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💬 Chat History
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Document Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔎 Semantic Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-basic-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Basic Chat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-coding-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Coding Task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-summarization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Summarization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Example: Extraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#effective-prompt-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧰 Effective Prompt Construction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#missing-model-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚨 Missing Model Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Recommended Sequence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Practical Defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-api-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔗 Related API Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="text-generation">Text Generation<a class="headerlink" href="#text-generation" title="Permanent link">&para;</a></h1>
+<p>The Text Generation workflow is the primary chat and completion surface in Loca. It lets the user
+select a local model, configure runtime generation settings, provide system instructions, optionally
+include document or semantic context, and generate responses through the local GGUF runtime.</p>
+<h2 id="purpose">🧭 Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Text Generation provides the main local assistant workflow for Loca. It coordinates model selection,
+prompt construction, generation controls, chat history, optional context injection, and response
+rendering in the Streamlit interface.</p>
+<p>This page explains how to use the Text Generation mode, how the prompt is assembled, and how runtime
+settings affect model output.</p>
+<h2 id="workflow-position">🧱 Workflow Position<a class="headerlink" href="#workflow-position" title="Permanent link">&para;</a></h2>
+<p>Text Generation sits at the center of the application.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>User Input
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  ▼
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Text Generation UI
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  ├── System Instructions
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  ├── Task Preset
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  ├── Runtime Settings
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  ├── Chat History
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  ├── Document Context
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  └── Semantic Context
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  │
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  ▼
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>Prompt Builder
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  │
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  ▼
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>Local GGUF Runtime
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  │
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  ▼
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>Generated Response
+</span></code></pre></div>
+<p>The workflow is implemented primarily in <code>app.py</code> and uses model, mode, and path information from
+<code>config.py</code>.</p>
+<h2 id="model-selection">🧠 Model Selection<a class="headerlink" href="#model-selection" title="Permanent link">&para;</a></h2>
+<p>Loca uses a central model registry to determine which local models are available and which modes
+each model supports. The active model controls:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model name</td>
+<td>The selected local model, such as Bro, Buddy, Boo, Gipity, Jimi, Leeroy, or Nisty.</td>
+</tr>
+<tr>
+<td>Model path</td>
+<td>The configured GGUF file path used by <code>llama-cpp-python</code>.</td>
+</tr>
+<tr>
+<td>Supported modes</td>
+<td>The application modes exposed for the selected model.</td>
+</tr>
+<tr>
+<td>Model family</td>
+<td>The model family or provider-style grouping.</td>
+</tr>
+<tr>
+<td>Base model</td>
+<td>The underlying base model name used for capability checks.</td>
+</tr>
+<tr>
+<td>Chat template</td>
+<td>The expected prompt formatting style.</td>
+</tr>
+</tbody>
+</table>
+<p>When the selected model changes, Loca synchronizes derived model state into Streamlit session state.
+This prevents the interface from showing stale mode, path, or capability information.</p>
+<h2 id="runtime-settings">⚙️ Runtime Settings<a class="headerlink" href="#runtime-settings" title="Permanent link">&para;</a></h2>
+<p>Text Generation uses several runtime controls to shape the model response.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Context Window</td>
+<td>Controls how much prompt context the local model can process.</td>
+</tr>
+<tr>
+<td>CPU Threads</td>
+<td>Controls how many CPU threads are used by local inference.</td>
+</tr>
+<tr>
+<td>Max Tokens</td>
+<td>Limits the number of generated tokens.</td>
+</tr>
+<tr>
+<td>Temperature</td>
+<td>Controls response randomness. Lower values are more deterministic.</td>
+</tr>
+<tr>
+<td>Top-p</td>
+<td>Controls nucleus sampling. Lower values narrow token selection.</td>
+</tr>
+<tr>
+<td>Top-k</td>
+<td>Limits token candidates during sampling when supported.</td>
+</tr>
+<tr>
+<td>Repeat Penalty</td>
+<td>Penalizes repeated tokens to reduce looping.</td>
+</tr>
+<tr>
+<td>Repeat Window</td>
+<td>Controls how far back repetition penalties are considered.</td>
+</tr>
+<tr>
+<td>Random Seed</td>
+<td>Supports repeatable generations when fixed.</td>
+</tr>
+</tbody>
+</table>
+<p>Recommended starting point:</p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th style="text-align: right;">Temperature</th>
+<th style="text-align: right;">Top-p</th>
+<th style="text-align: right;">Max Tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Factual answer</td>
+<td style="text-align: right;"><code>0.0</code> to <code>0.2</code></td>
+<td style="text-align: right;"><code>0.90</code> to <code>0.95</code></td>
+<td style="text-align: right;"><code>512</code> to <code>1024</code></td>
+</tr>
+<tr>
+<td>Code generation</td>
+<td style="text-align: right;"><code>0.0</code> to <code>0.3</code></td>
+<td style="text-align: right;"><code>0.90</code> to <code>0.95</code></td>
+<td style="text-align: right;"><code>1024</code> to <code>2048</code></td>
+</tr>
+<tr>
+<td>Brainstorming</td>
+<td style="text-align: right;"><code>0.6</code> to <code>0.9</code></td>
+<td style="text-align: right;"><code>0.95</code> to <code>1.0</code></td>
+<td style="text-align: right;"><code>1024</code> to <code>2048</code></td>
+</tr>
+<tr>
+<td>Summarization</td>
+<td style="text-align: right;"><code>0.0</code> to <code>0.3</code></td>
+<td style="text-align: right;"><code>0.90</code> to <code>0.95</code></td>
+<td style="text-align: right;"><code>512</code> to <code>1536</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="system-instructions">🧾 System Instructions<a class="headerlink" href="#system-instructions" title="Permanent link">&para;</a></h2>
+<p>System instructions define high-level behavior for the model. They can control tone, task framing,
+output format, reasoning expectations, and response constraints.</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>You are a concise technical assistant. Answer with accurate, practical guidance and avoid unsupported claims.
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>You are a Python documentation assistant. Produce Google-style docstrings compatible with MkDocs, mkdocstrings, and griffe.
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>You are a local coding assistant. Preserve existing behavior, avoid changing public signatures, and return editor-ready code.
+</span></code></pre></div>
+<p>System instructions are included before user input when Loca builds the model prompt.</p>
+<h2 id="task-presets">🧩 Task Presets<a class="headerlink" href="#task-presets" title="Permanent link">&para;</a></h2>
+<p>Text Generation supports task-oriented presets that modify the instruction block passed to the
+model.</p>
+<table>
+<thead>
+<tr>
+<th>Preset</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chat</td>
+<td>General-purpose assistant behavior.</td>
+</tr>
+<tr>
+<td>Reasoning</td>
+<td>More careful analytical answers.</td>
+</tr>
+<tr>
+<td>Coding</td>
+<td>Editor-ready code generation, debugging, or refactoring.</td>
+</tr>
+<tr>
+<td>Translation</td>
+<td>Faithful translation into a selected target language.</td>
+</tr>
+<tr>
+<td>Summarization</td>
+<td>Concise summaries that preserve key facts.</td>
+</tr>
+<tr>
+<td>Extraction</td>
+<td>Structured extraction from supplied text.</td>
+</tr>
+</tbody>
+</table>
+<p>The selected task preset is combined with the system instructions to form the effective prompt.</p>
+<h2 id="chat-history">💬 Chat History<a class="headerlink" href="#chat-history" title="Permanent link">&para;</a></h2>
+<p>When chat history is enabled, prior user and assistant messages are included in the prompt. This
+gives the local model continuity across turns.</p>
+<p>Use chat history when:</p>
+<ul>
+<li>the current question depends on earlier conversation;</li>
+<li>the user is iterating on a code block;</li>
+<li>the assistant needs prior constraints;</li>
+<li>a multi-step workflow is underway.</li>
+</ul>
+<p>Disable chat history when:</p>
+<ul>
+<li>the response should be independent;</li>
+<li>the prior conversation may pollute the answer;</li>
+<li>the context window is too small;</li>
+<li>the model starts repeating earlier content.</li>
+</ul>
+<h2 id="document-context">📄 Document Context<a class="headerlink" href="#document-context" title="Permanent link">&para;</a></h2>
+<p>Text Generation can include document context from uploaded or processed content. When enabled,
+selected document text is inserted into the prompt as supporting context.</p>
+<p>Use document context for:</p>
+<ul>
+<li>summarizing uploaded material;</li>
+<li>answering questions from source documents;</li>
+<li>drafting documentation from project notes;</li>
+<li>grounding a response in local files.</li>
+</ul>
+<p>Document context is separate from Document Q&amp;A mode. Text Generation uses the available context
+directly, while Document Q&amp;A focuses on retrieval-grounded answering from extracted chunks.</p>
+<h2 id="semantic-context">🔎 Semantic Context<a class="headerlink" href="#semantic-context" title="Permanent link">&para;</a></h2>
+<p>Semantic context uses embedding-based retrieval to locate relevant chunks from indexed content. When
+enabled, Loca searches stored embeddings for content similar to the current user input and injects
+the best matching chunks into the prompt.</p>
+<p>The semantic workflow is useful when:</p>
+<ul>
+<li>the source material is too large to include directly;</li>
+<li>the user needs focused context from a document set;</li>
+<li>prior indexed content should support the answer;</li>
+<li>the model needs retrieval support before generating.</li>
+</ul>
+<p>If no compatible embedder, embedding table, or vector data is available, Loca reports the limitation
+and continues safely.</p>
+<h2 id="example-basic-chat">🧪 Example: Basic Chat<a class="headerlink" href="#example-basic-chat" title="Permanent link">&para;</a></h2>
+<p>Use Text Generation for a simple local assistant exchange.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>System Instructions:
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>You are Loca, a practical local AI assistant. Be accurate, concise, and helpful.
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Task Preset:
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Chat
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>User Input:
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>Explain the difference between temperature and top-p in local LLM generation.
+</span></code></pre></div>
+<p>Expected behavior:</p>
+<ul>
+<li>Loca builds a prompt from the system instructions, task preset, and user input.</li>
+<li>The selected local model generates a response.</li>
+<li>The response is rendered in the Streamlit chat area.</li>
+</ul>
+<h2 id="example-coding-task">🧪 Example: Coding Task<a class="headerlink" href="#example-coding-task" title="Permanent link">&para;</a></h2>
+<p>Use the Coding preset when requesting source code.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>System Instructions:
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Produce correct, editor-ready Python code. Preserve existing public function signatures.
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Task Preset:
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Coding
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>User Input:
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>Create a function that validates a file path, confirms the file exists, and returns the resolved Path.
+</span></code></pre></div>
+<p>Recommended settings:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temperature</td>
+<td style="text-align: right;"><code>0.0</code> to <code>0.2</code></td>
+</tr>
+<tr>
+<td>Top-p</td>
+<td style="text-align: right;"><code>0.90</code> to <code>0.95</code></td>
+</tr>
+<tr>
+<td>Max Tokens</td>
+<td style="text-align: right;"><code>1024</code> or higher</td>
+</tr>
+<tr>
+<td>Chat History</td>
+<td style="text-align: right;">Enabled when iterating on existing code</td>
+</tr>
+</tbody>
+</table>
+<h2 id="example-summarization">🧪 Example: Summarization<a class="headerlink" href="#example-summarization" title="Permanent link">&para;</a></h2>
+<p>Use the Summarization preset for concise output.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>System Instructions:
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Summarize faithfully. Preserve names, dates, numbers, and conclusions.
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>Task Preset:
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Summarization
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>User Input:
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>Summarize the following release notes into five bullets:
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>[paste release notes here]
+</span></code></pre></div>
+<p>Recommended settings:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temperature</td>
+<td style="text-align: right;"><code>0.0</code> to <code>0.3</code></td>
+</tr>
+<tr>
+<td>Top-p</td>
+<td style="text-align: right;"><code>0.90</code> to <code>0.95</code></td>
+</tr>
+<tr>
+<td>Max Tokens</td>
+<td style="text-align: right;"><code>512</code> to <code>1536</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="example-extraction">🧪 Example: Extraction<a class="headerlink" href="#example-extraction" title="Permanent link">&para;</a></h2>
+<p>Use the Extraction preset when the model should return facts from supplied content.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>System Instructions:
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Extract only facts that are explicitly present. If a value is missing, return &quot;Not provided.&quot;
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Task Preset:
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Extraction
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>Response Format:
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>JSON
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>User Input:
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>Extract the project name, primary model, database path, and logging table from the following text:
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>[paste source text here]
+</span></code></pre></div>
+<p>Recommended behavior:</p>
+<ul>
+<li>avoid invented values;</li>
+<li>preserve exact names;</li>
+<li>use stable field names;</li>
+<li>return valid JSON when JSON output is requested.</li>
+</ul>
+<h2 id="effective-prompt-construction">🧰 Effective Prompt Construction<a class="headerlink" href="#effective-prompt-construction" title="Permanent link">&para;</a></h2>
+<p>Loca builds the final prompt from several sources.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>System Instructions
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  +
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Task Instruction Block
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  +
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Optional Semantic Context
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  +
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>Optional Document Context
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>  +
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>Optional Chat History
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>  +
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>Current User Input
+</span></code></pre></div>
+<p>This layered prompt design allows the same model runtime to support general chat, coding, reasoning,
+translation, summarization, extraction, and grounded context workflows.</p>
+<h2 id="missing-model-handling">🚨 Missing Model Handling<a class="headerlink" href="#missing-model-handling" title="Permanent link">&para;</a></h2>
+<p>If the selected model path is missing or <code>llama-cpp-python</code> is unavailable, Loca returns a
+user-facing diagnostic instead of failing with an unclear runtime error.</p>
+<p>Common causes include:</p>
+<table>
+<thead>
+<tr>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing GGUF file</td>
+<td>Confirm the model file exists at the configured path.</td>
+</tr>
+<tr>
+<td>Empty model path</td>
+<td>Set the correct environment variable or update <code>config.py</code>.</td>
+</tr>
+<tr>
+<td>Missing <code>llama-cpp-python</code></td>
+<td>Install or repair the package in the active virtual environment.</td>
+</tr>
+<tr>
+<td>Wrong selected model</td>
+<td>Select a model with a valid configured path.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommended-sequence">✅ Recommended Sequence<a class="headerlink" href="#recommended-sequence" title="Permanent link">&para;</a></h2>
+<p>Use this sequence for reliable Text Generation results:</p>
+<ol>
+<li>Select the local model.</li>
+<li>Confirm the model path is configured.</li>
+<li>Select <code>Text Generation</code> mode.</li>
+<li>Set the task preset.</li>
+<li>Enter or select system instructions.</li>
+<li>Adjust runtime settings.</li>
+<li>Enable chat history only when continuity is needed.</li>
+<li>Enable document or semantic context only when grounding is needed.</li>
+<li>Submit the user input.</li>
+<li>Review the generated response.</li>
+<li>Clear or revise context when switching tasks.</li>
+</ol>
+<h2 id="practical-defaults">🧭 Practical Defaults<a class="headerlink" href="#practical-defaults" title="Permanent link">&para;</a></h2>
+<p>A stable default configuration for most technical work is:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th style="text-align: right;">Recommended Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task Preset</td>
+<td style="text-align: right;"><code>Chat</code> or <code>Coding</code></td>
+</tr>
+<tr>
+<td>Temperature</td>
+<td style="text-align: right;"><code>0.1</code></td>
+</tr>
+<tr>
+<td>Top-p</td>
+<td style="text-align: right;"><code>0.95</code></td>
+</tr>
+<tr>
+<td>Repeat Penalty</td>
+<td style="text-align: right;"><code>1.1</code></td>
+</tr>
+<tr>
+<td>Max Tokens</td>
+<td style="text-align: right;"><code>1024</code></td>
+</tr>
+<tr>
+<td>Chat History</td>
+<td style="text-align: right;">Enabled</td>
+</tr>
+<tr>
+<td>Document Context</td>
+<td style="text-align: right;">Disabled unless needed</td>
+</tr>
+<tr>
+<td>Semantic Context</td>
+<td style="text-align: right;">Disabled unless indexed content is available</td>
+</tr>
+</tbody>
+</table>
+<h2 id="troubleshooting">🛠️ Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Likely Cause</th>
+<th>Corrective Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Response is empty</td>
+<td>Prompt is empty or model failed to load</td>
+<td>Confirm input text and model path.</td>
+</tr>
+<tr>
+<td>Response repeats itself</td>
+<td>Sampling settings are too loose</td>
+<td>Increase repeat penalty or reduce temperature.</td>
+</tr>
+<tr>
+<td>Response ignores context</td>
+<td>Context not enabled or too much irrelevant context</td>
+<td>Enable the correct context source and reduce unrelated text.</td>
+</tr>
+<tr>
+<td>Model crashes during generation</td>
+<td>Invalid runtime setting or unsupported argument</td>
+<td>Use conservative defaults and retry.</td>
+</tr>
+<tr>
+<td>Output is too short</td>
+<td>Max tokens too low</td>
+<td>Increase max tokens.</td>
+</tr>
+<tr>
+<td>Output is too random</td>
+<td>Temperature too high</td>
+<td>Lower temperature.</td>
+</tr>
+<tr>
+<td>Output is too rigid</td>
+<td>Temperature too low</td>
+<td>Increase temperature slightly.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-api-pages">🔗 Related API Pages<a class="headerlink" href="#related-api-pages" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../api/app/">Application</a></li>
+<li><a href="../../api/config/">Configuration</a></li>
+<li><a href="../../api/boogr/">Logging</a></li>
+<li><a href="../document-qna/">Document Q&amp;A</a></li>
+<li><a href="../semantic-search/">Semantic Search</a></li>
+<li><a href="../prompt-engineering/">Prompt Engineering</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/js/loca.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1818 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Loca AI application.">
+      
+      
+        <meta name="author" content="Terry D. Eppler">
+      
+      
+        <link rel="canonical" href="https://is-leeroy-jenkins.github.io/Loca/architecture/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../user-guide/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../img/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Architecture - Loca AI Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/css/loca.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#loca-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Loca AI Documentation" class="md-header__button md-logo" aria-label="Loca AI Documentation" data-md-component="logo">
+      
+  <img src="../img/loca-llama-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Loca AI Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/is-leeroy-jenkins/Loca.git" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Loca Llama AI
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../user-guide/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../development/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Development
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Loca AI Documentation" class="md-nav__button md-logo" aria-label="Loca AI Documentation" data-md-component="logo">
+      
+  <img src="../img/loca-llama-logo.png" alt="logo">
+
+    </a>
+    Loca AI Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/is-leeroy-jenkins/Loca.git" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Loca Llama AI
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧱 Application Layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-model-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧠 Local Model Runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-and-mode-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔀 Model and Mode Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-state-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗂️ Session-State Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-qa-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Document Q&amp;A Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-search-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔎 Semantic Search Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompt-engineering-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧰 Prompt Engineering Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-calling-and-tool-grounded-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Function Calling and Tool-Grounded Responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#web-context-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🌐 Web Context Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sqlite-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗃️ SQLite Storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exception-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚨 Exception Logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Documentation Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 End-to-End Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-api-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔗 Related API Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/text-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Text Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/document-qna/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Q&A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/semantic-search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/data-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/boogr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧱 Application Layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-model-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧠 Local Model Runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-and-mode-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔀 Model and Mode Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-state-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗂️ Session-State Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-qa-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Document Q&amp;A Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-search-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔎 Semantic Search Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompt-engineering-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧰 Prompt Engineering Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-calling-and-tool-grounded-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Function Calling and Tool-Grounded Responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#web-context-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🌐 Web Context Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sqlite-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗃️ SQLite Storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exception-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚨 Exception Logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Documentation Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 End-to-End Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-api-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔗 Related API Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="loca-architecture">Loca Architecture<a class="headerlink" href="#loca-architecture" title="Permanent link">&para;</a></h1>
+<p>Loca is a local AI application that provides a Streamlit interface for running local GGUF-based
+language models, managing prompts, querying documents, performing semantic search, and storing
+application data in SQLite. The application is organized around a single Streamlit runtime, a
+centralized configuration contract, and a lightweight exception logging layer.</p>
+<h2 id="purpose">🧭 Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>The architecture is designed to keep local model execution, user-interface state, document
+workflows, prompt management, and diagnostic logging coordinated through a small set of predictable
+application layers.</p>
+<p>Loca emphasizes:</p>
+<ul>
+<li>local-first inference through <code>llama-cpp-python</code>;</li>
+<li>configurable model routing through <code>config.py</code>;</li>
+<li>Streamlit session-state consistency across UI modes;</li>
+<li>document ingestion and retrieval workflows;</li>
+<li>SQLite-backed chat, prompt, document, and embedding storage;</li>
+<li>failure-safe exception logging through <code>boogr.py</code>;</li>
+<li>source-driven documentation through MkDocs, mkdocstrings, and Google-style docstrings.</li>
+</ul>
+<h2 id="application-layers">🧱 Application Layers<a class="headerlink" href="#application-layers" title="Permanent link">&para;</a></h2>
+<p>Loca is organized into five primary layers:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Primary File</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User Interface</td>
+<td><code>app.py</code></td>
+<td>Renders Streamlit controls, tabs, selectors, upload panels, chat surfaces, and workflow-specific panels.</td>
+</tr>
+<tr>
+<td>Runtime Orchestration</td>
+<td><code>app.py</code></td>
+<td>Coordinates model loading, prompt construction, generation settings, streaming output, document context, and semantic retrieval.</td>
+</tr>
+<tr>
+<td>Configuration</td>
+<td><code>config.py</code></td>
+<td>Defines application constants, model registry entries, mode contracts, environment-variable helpers, resource paths, and logging paths.</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td><code>app.py</code> / SQLite</td>
+<td>Stores chat history, prompts, documents, chunks, embeddings, and application metadata.</td>
+</tr>
+<tr>
+<td>Diagnostics</td>
+<td><code>boogr.py</code></td>
+<td>Wraps exceptions and writes structured error records to the configured SQLite exception database.</td>
+</tr>
+</tbody>
+</table>
+<p>The application intentionally keeps its runtime contract explicit. Most workflows read from and
+write to <code>st.session_state</code>, while longer-lived records are persisted to SQLite.</p>
+<h2 id="local-model-runtime">🧠 Local Model Runtime<a class="headerlink" href="#local-model-runtime" title="Permanent link">&para;</a></h2>
+<p>Loca uses local model paths defined in the model registry. Each model entry contains the model path,
+logo, supported modes, family, base model, chat template, size, and description.</p>
+<p>The runtime flow is:</p>
+<ol>
+<li>The user selects a model in the Streamlit interface.</li>
+<li><code>app.py</code> synchronizes the selected model name, path, supported modes, and model specification
+   into session state.</li>
+<li>The selected mode determines which workflow panel is rendered.</li>
+<li>Runtime settings such as context window, CPU threads, temperature, top-p, repeat penalty, and max
+   tokens are read from session state.</li>
+<li><code>llama-cpp-python</code> loads the selected GGUF model when available.</li>
+<li>The application builds a prompt using system instructions, task instructions, document context,
+   semantic context, and chat history.</li>
+<li>The local model generates either a complete response or streamed output.</li>
+</ol>
+<h2 id="model-and-mode-contract">🔀 Model and Mode Contract<a class="headerlink" href="#model-and-mode-contract" title="Permanent link">&para;</a></h2>
+<p>The model contract is centralized in <code>config.py</code>.</p>
+<p>The core mode constants are:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TEXT_MODE</code></td>
+<td>General local text generation and chat.</td>
+</tr>
+<tr>
+<td><code>IMAGE_MODE</code></td>
+<td>Placeholder or gated image-capable workflow for models that advertise image support.</td>
+</tr>
+<tr>
+<td><code>AUDIO_MODE</code></td>
+<td>Placeholder or gated audio-capable workflow for models that advertise audio support.</td>
+</tr>
+<tr>
+<td><code>DOCQNA_MODE</code></td>
+<td>Document upload, extraction, chunking, retrieval, and grounded question answering.</td>
+</tr>
+<tr>
+<td><code>SEMANTIC_MODE</code></td>
+<td>Semantic indexing and similarity search over uploaded or registered content.</td>
+</tr>
+<tr>
+<td><code>PROMPT_MODE</code></td>
+<td>Prompt template creation, editing, cloning, and reuse.</td>
+</tr>
+<tr>
+<td><code>DATA_MODE</code></td>
+<td>Application data inspection and management.</td>
+</tr>
+</tbody>
+</table>
+<p>Each model advertises its supported modes. The UI uses this registry to avoid exposing workflows
+that are not available for the active model.</p>
+<h2 id="session-state-contract">🗂️ Session-State Contract<a class="headerlink" href="#session-state-contract" title="Permanent link">&para;</a></h2>
+<p>Streamlit session state is the central runtime coordination mechanism. Loca initializes required
+keys early so later UI panels can safely read from them without causing missing-key failures.</p>
+<p>Important session-state groups include:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Example Keys</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model Selection</td>
+<td><code>selected_model_name</code>, <code>selected_model_path</code>, <code>selected_model_modes</code>, <code>selected_model_spec</code></td>
+<td>Tracks the active local model and its registry metadata.</td>
+</tr>
+<tr>
+<td>Generation Settings</td>
+<td><code>temperature</code>, <code>top_percent</code>, <code>top_k</code>, <code>max_tokens</code>, <code>repeat_penalty</code>, <code>context_window</code>, <code>cpu_threads</code></td>
+<td>Controls local model generation behavior.</td>
+</tr>
+<tr>
+<td>Chat State</td>
+<td><code>messages</code>, <code>use_chat_history</code>, <code>system_instructions</code></td>
+<td>Maintains conversational context and shared instruction text.</td>
+</tr>
+<tr>
+<td>Document Q&amp;A</td>
+<td><code>uploaded</code>, <code>active_docs</code>, <code>doc_bytes</code>, <code>docqna_vec_ready</code>, <code>retrieval_k</code></td>
+<td>Supports document upload, extraction, chunking, and retrieval.</td>
+</tr>
+<tr>
+<td>Semantic Search</td>
+<td><code>semantic_context_buffer</code>, <code>semantic_top_k</code>, <code>semantic_result_rows</code>, <code>semantic_index_chunk_count</code></td>
+<td>Supports semantic indexing and similarity search.</td>
+</tr>
+<tr>
+<td>Prompt Engineering</td>
+<td><code>prompt_category</code>, <code>prompt_task</code>, <code>pe_generated_template</code>, <code>active_prompt_caption</code></td>
+<td>Supports prompt template creation and reuse.</td>
+</tr>
+<tr>
+<td>Data Management</td>
+<td><code>dm_asset_sync_status</code>, <code>dm_asset_counts</code>, <code>dm_selected_asset_table</code></td>
+<td>Supports database asset inspection and management.</td>
+</tr>
+<tr>
+<td>Capability State</td>
+<td><code>active_model_capabilities</code>, <code>function_call_enabled</code>, <code>thinking_mode_enabled</code>, <code>coding_mode_enabled</code></td>
+<td>Tracks model-gated advanced workflows.</td>
+</tr>
+</tbody>
+</table>
+<p>This structure allows the Streamlit app to rerun safely while preserving user choices, generated
+content, uploaded document state, and workflow outputs.</p>
+<h2 id="document-qa-pipeline">📄 Document Q&amp;A Pipeline<a class="headerlink" href="#document-qa-pipeline" title="Permanent link">&para;</a></h2>
+<p>The Document Q&amp;A workflow converts uploaded files into retrievable context for grounded local model
+responses.</p>
+<p>The pipeline is:</p>
+<ol>
+<li>The user uploads supported documents.</li>
+<li>The application extracts text using available parsers.</li>
+<li>Text is normalized and split into overlapping chunks.</li>
+<li>Chunks are stored in session state and optionally persisted to SQLite.</li>
+<li>Embeddings are generated when an embedding backend is available.</li>
+<li>Retrieval settings determine how many chunks are selected for a question.</li>
+<li>Retrieved excerpts are inserted into the prompt as document context.</li>
+<li>The local model answers using the supplied excerpts.</li>
+</ol>
+<p>The retrieval profile can be adjusted by model. Smaller models receive narrower retrieval defaults
+so prompts remain compact and less likely to exceed practical local runtime limits.</p>
+<h2 id="semantic-search-pipeline">🔎 Semantic Search Pipeline<a class="headerlink" href="#semantic-search-pipeline" title="Permanent link">&para;</a></h2>
+<p>Semantic Search provides similarity-based retrieval over indexed text.</p>
+<p>The workflow is:</p>
+<ol>
+<li>Source documents are loaded or uploaded.</li>
+<li>Text is chunked using the configured chunk size and overlap.</li>
+<li>Chunks are embedded when an embedding model is available.</li>
+<li>Embeddings are stored as vectors in SQLite or maintained in session state.</li>
+<li>A query is embedded using the same embedding process.</li>
+<li>Cosine similarity ranks the indexed chunks.</li>
+<li>Matching chunks are returned to the user and may be reused as context.</li>
+</ol>
+<p>The semantic workflow is designed to fail safely. When an embedder, embedding table, or compatible
+vector is unavailable, the application reports the limitation instead of crashing the main Streamlit
+workflow.</p>
+<h2 id="prompt-engineering-workflow">🧰 Prompt Engineering Workflow<a class="headerlink" href="#prompt-engineering-workflow" title="Permanent link">&para;</a></h2>
+<p>The Prompt Engineering mode provides a structured interface for managing reusable prompts.</p>
+<p>The workflow supports:</p>
+<ul>
+<li>browsing stored prompt templates;</li>
+<li>selecting templates by caption;</li>
+<li>editing prompt text and metadata;</li>
+<li>cloning existing prompt records;</li>
+<li>generating starter prompt drafts;</li>
+<li>applying prompt text to Text Generation;</li>
+<li>applying prompt text to Document Q&A;</li>
+<li>converting between XML-like prompt blocks and Markdown headings.</li>
+</ul>
+<p>Prompt records are stored in the SQLite <code>Prompts</code> table. The application keeps prompt metadata
+aligned with shared generation state so prompt templates can control task type, response format, and
+preferred language.</p>
+<h2 id="function-calling-and-tool-grounded-responses">🧪 Function Calling and Tool-Grounded Responses<a class="headerlink" href="#function-calling-and-tool-grounded-responses" title="Permanent link">&para;</a></h2>
+<p>Loca includes an app-mediated function-calling workflow for models that advertise function-calling
+capability.</p>
+<p>The function-calling flow is:</p>
+<ol>
+<li>The user submits a task.</li>
+<li>The selected model is prompted to produce a strict JSON tool-call object.</li>
+<li>The application parses and normalizes the tool call.</li>
+<li>The requested function name is checked against an allowlist.</li>
+<li>The application executes only approved internal functions.</li>
+<li>The tool result is passed back into the model for a grounded final answer.</li>
+</ol>
+<p>This design prevents arbitrary model-generated function names from executing application code. The
+model proposes a function call, but the application validates and controls execution.</p>
+<h2 id="web-context-workflow">🌐 Web Context Workflow<a class="headerlink" href="#web-context-workflow" title="Permanent link">&para;</a></h2>
+<p>For models that advertise web-browsing capability, Loca includes a bounded web-context workflow.</p>
+<p>The web workflow:</p>
+<ol>
+<li>Validates the requested URL.</li>
+<li>Allows only HTTP and HTTPS schemes.</li>
+<li>Blocks local, loopback, private, reserved, multicast, and link-local hosts.</li>
+<li>Optionally restricts the request to an allowed domain.</li>
+<li>Fetches a bounded amount of public text.</li>
+<li>Converts HTML to readable text when needed.</li>
+<li>Sends the fetched context to Text Generation or returns it as a tool result.</li>
+</ol>
+<p>This layer is intentionally constrained. It is designed for controlled grounding, not unrestricted
+browsing.</p>
+<h2 id="sqlite-storage">🗃️ SQLite Storage<a class="headerlink" href="#sqlite-storage" title="Permanent link">&para;</a></h2>
+<p>Loca uses SQLite for lightweight local persistence.</p>
+<p>The database layer supports:</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chat_history</code></td>
+<td>Stores persisted chat messages.</td>
+</tr>
+<tr>
+<td><code>embeddings</code></td>
+<td>Stores text chunks and vector blobs for retrieval.</td>
+</tr>
+<tr>
+<td><code>Prompts</code></td>
+<td>Stores reusable prompt templates and metadata.</td>
+</tr>
+<tr>
+<td><code>documents</code></td>
+<td>Stores document-level metadata.</td>
+</tr>
+<tr>
+<td><code>document_chunks</code></td>
+<td>Stores extracted document chunks.</td>
+</tr>
+<tr>
+<td><code>document_embeddings</code></td>
+<td>Stores document-specific embeddings where supported.</td>
+</tr>
+</tbody>
+</table>
+<p>SQLite keeps the application self-contained and suitable for local desktop use without requiring a
+separate database server.</p>
+<h2 id="exception-logging">🚨 Exception Logging<a class="headerlink" href="#exception-logging" title="Permanent link">&para;</a></h2>
+<p>Loca uses <code>boogr.py</code> for structured exception handling.</p>
+<p>The diagnostic layer includes:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Error</code></td>
+<td>Wraps an original exception with module, cause, method, traceback, and diagnostic text.</td>
+</tr>
+<tr>
+<td><code>Logger</code></td>
+<td>Creates the exception table when needed and writes wrapped exception records to SQLite.</td>
+</tr>
+<tr>
+<td><code>config.LOG_PATH</code></td>
+<td>Defines the SQLite database path for exception records.</td>
+</tr>
+<tr>
+<td><code>config.LOG_FILE</code></td>
+<td>Defines the exception table name.</td>
+</tr>
+</tbody>
+</table>
+<p>The logging pattern is:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">exception</span> <span class="o">=</span> <span class="n">Error</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">exception</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="s1">&#39;app&#39;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">exception</span><span class="o">.</span><span class="n">cause</span> <span class="o">=</span> <span class="s1">&#39;WorkflowName&#39;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">exception</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;function_name( arg: type ) -&gt; return_type&#39;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">Logger</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">exception</span> <span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">raise</span> <span class="n">exception</span>
+</span></code></pre></div>
+<p>Method strings are stable signatures only. They should not include prompt text, uploaded file
+contents, user input, dataframe contents, secrets, API keys, tokens, or full runtime data.</p>
+<h2 id="documentation-architecture">🧩 Documentation Architecture<a class="headerlink" href="#documentation-architecture" title="Permanent link">&para;</a></h2>
+<p>Loca documentation is generated from the source code using MkDocs, Material for MkDocs,
+mkdocstrings, and griffe-compatible Google-style docstrings.</p>
+<p>The documentation architecture should include:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docs/
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── index.md
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── architecture.md
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├── development.md
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├── user-guide/
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│   ├── index.md
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── text-generation.md
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   ├── document-qna.md
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   ├── semantic-search.md
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│   ├── prompt-engineering.md
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   └── data-management.md
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>├── api/
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── index.md
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── app.md
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   ├── config.md
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│   └── boogr.md
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>└── assets/
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    ├── css/
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    │   └── loca.css
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    └── js/
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        └── loca.js
+</span></code></pre></div>
+<p>The API pages should remain source-driven:</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gh"># App API</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>::: app
+</span></code></pre></div>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gh"># Configuration API</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>::: config
+</span></code></pre></div>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gh"># Logging API</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>::: boogr
+</span></code></pre></div>
+<p>This keeps the API reference aligned with the actual source code and prevents manual documentation
+drift.</p>
+<h2 id="end-to-end-workflow">🧭 End-to-End Workflow<a class="headerlink" href="#end-to-end-workflow" title="Permanent link">&para;</a></h2>
+<p>The full application flow is:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>User
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  │
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  ▼
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Streamlit UI
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  │
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  ├── Model and mode selection
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  ├── Runtime settings
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>  ├── System instructions
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>  ├── Document upload
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>  ├── Prompt templates
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>  └── Data management controls
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>  │
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>  ▼
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>Session-State Contract
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>  │
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>  ├── Selected model metadata
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>  ├── Generation controls
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>  ├── Document state
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>  ├── Semantic search state
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>  ├── Prompt engineering state
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>  └── Capability flags
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>  │
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>  ▼
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>Runtime Orchestration
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>  │
+</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>  ├── Prompt construction
+</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>  ├── Context retrieval
+</span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>  ├── Tool-call validation
+</span><span id="__span-5-29"><a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>  ├── Web-context validation
+</span><span id="__span-5-30"><a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>  └── Local model execution
+</span><span id="__span-5-31"><a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>  │
+</span><span id="__span-5-32"><a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>  ▼
+</span><span id="__span-5-33"><a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>Local GGUF Model
+</span><span id="__span-5-34"><a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>  │
+</span><span id="__span-5-35"><a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>  ▼
+</span><span id="__span-5-36"><a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>Generated Response
+</span><span id="__span-5-37"><a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>  │
+</span><span id="__span-5-38"><a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>  ├── Displayed in Streamlit
+</span><span id="__span-5-39"><a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>  ├── Stored in chat history when applicable
+</span><span id="__span-5-40"><a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>  └── Logged if runtime failure occurs
+</span></code></pre></div>
+<h2 id="design-principles">✅ Design Principles<a class="headerlink" href="#design-principles" title="Permanent link">&para;</a></h2>
+<p>Loca follows several practical design principles:</p>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local-first execution</td>
+<td>Models run from configured local GGUF paths.</td>
+</tr>
+<tr>
+<td>Explicit configuration</td>
+<td>Model registry, modes, logos, and paths are centralized in <code>config.py</code>.</td>
+</tr>
+<tr>
+<td>Safe reruns</td>
+<td>Session-state keys are initialized before use.</td>
+</tr>
+<tr>
+<td>Source-driven docs</td>
+<td>API documentation is generated directly from Google-style docstrings.</td>
+</tr>
+<tr>
+<td>Fail-safe diagnostics</td>
+<td>Logging failures do not mask original application failures.</td>
+</tr>
+<tr>
+<td>Controlled tool execution</td>
+<td>Function calls are parsed, normalized, allowlisted, and executed by the app.</td>
+</tr>
+<tr>
+<td>Bounded retrieval</td>
+<td>Document and semantic retrieval use configurable chunk and top-k limits.</td>
+</tr>
+<tr>
+<td>MkDocs compatibility</td>
+<td>Docstrings avoid griffe-hostile section formats and invalid return documentation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-api-pages">🔗 Related API Pages<a class="headerlink" href="#related-api-pages" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../api/app/">Application</a></li>
+<li><a href="../api/config/">Configuration</a></li>
+<li><a href="../api/boogr/">Logging</a></li>
+<li><a href="../user-guide/">User Guide</a></li>
+<li><a href="../development/">Development Guide</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../assets/js/loca.js"></script>
+      
+    
+  </body>
+</html>
