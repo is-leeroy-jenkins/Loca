@@ -1,6 +1,6 @@
 
-site_name: Loca Documentation
-site_description: Documentation for the Loca local LLM Streamlit application.
+site_name: Loca Llama Documentation
+site_description: Documentation for the Loca AI application.
 site_author: Terry D. Eppler
 site_url: ""
 
@@ -29,8 +29,8 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: resources/images/favicon.ico
-  logo: resources/images/loca-llama_logo.png
+  favicon: img/favicon.ico
+  logo: img/loca-llama-logo.png
 
 plugins:
   - search
