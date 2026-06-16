@@ -1,6 +1,11 @@
+
 site_name: Loca Documentation
 site_description: Documentation for the Loca local LLM Streamlit application.
 site_author: Terry D. Eppler
+site_url: ""
+
+repo_url: "https://github.com/is-leeroy-jenkins/Loca.git"
+repo_name: "Loca Llama"
 
 theme:
   name: material
@@ -16,6 +21,7 @@ theme:
     - search.share
     - content.code.copy
     - content.code.select
+    - content.tabs.link
   palette:
     - scheme: slate
       primary: blue
@@ -23,6 +29,8 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
+  favicon: resources/images/favicon.ico
+  logo: resources/images/loca-llama_logo.png
 
 plugins:
   - search
@@ -41,3 +49,45 @@ plugins:
             members_order: source
             filters:
               - "!^_"
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - assets/css/loca.css
+
+extra_javascript:
+  - assets/js/loca.js
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - User Guide:
+      - Overview: user-guide/index.md
+      - Text Generation: user-guide/text-generation.md
+      - Document Q&A: user-guide/document-qna.md
+      - Semantic Search: user-guide/semantic-search.md
+      - Prompt Engineering: user-guide/prompt-engineering.md
+      - Data Management: user-guide/data-management.md
+  - API Reference:
+      - Overview: api/index.md
+      - Application: api/app.md
+      - Configuration: api/config.md
+      - Logging: api/boogr.md
+  - Development: development.md
+

@@ -1,0 +1,3045 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Loca local LLM Streamlit application.">
+      
+      
+        <meta name="author" content="Terry D. Eppler">
+      
+      
+      
+      
+        <link rel="next" href="architecture/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="resources/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Loca Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="assets/css/loca.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#key-features" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="Loca Documentation" class="md-header__button md-logo" aria-label="Loca Documentation" data-md-component="logo">
+      
+  <img src="resources/images/loca-llama_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Loca Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="user-guide/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="development/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Development
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="Loca Documentation" class="md-nav__button md-logo" aria-label="Loca Documentation" data-md-component="logo">
+      
+  <img src="resources/images/loca-llama_logo.png" alt="logo">
+
+    </a>
+    Loca Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Key Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Application Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🤖 Supported Models
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🏛 Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗂 Repository Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ System Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Installation &amp; Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Installation &amp; Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-clone-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1️⃣ Clone the Repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-create-and-activate-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2️⃣ Create and Activate a Virtual Environment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2️⃣ Create and Activate a Virtual Environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-powershell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows PowerShell
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows-command-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows Command Prompt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macos-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        macOS / Linux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-install-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3️⃣ Install Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-model-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📥 Local Model Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-locallama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ▶️ Running LocaLlama
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="▶️ Running LocaLlama">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optional-runtime-capability-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Runtime Capability Flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#text-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💬 Text Generation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="💬 Text Generation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#advanced-text-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Text Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#images-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🖼️ Images API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎧 Audio API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📚 Document Q&amp;A
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📚 Document Q&amp;A">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#buddy-compact-retrieval-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buddy Compact Retrieval Profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Semantic Search
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-calling-and-web-browsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧰 Function Calling and Web Browsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompt-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Prompt Engineering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗄️ Data Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🗄️ Data Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#local-sqlite-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local SQLite Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-footer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Status Footer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📦 Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#privacy-safety-and-design-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Privacy, Safety, and Design Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧬 Related Applications
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/text-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Text Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/document-qna/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Q&A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/semantic-search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/data-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/boogr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Key Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Application Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🤖 Supported Models
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🏛 Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗂 Repository Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ System Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Installation &amp; Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Installation &amp; Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-clone-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1️⃣ Clone the Repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-create-and-activate-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2️⃣ Create and Activate a Virtual Environment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2️⃣ Create and Activate a Virtual Environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-powershell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows PowerShell
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows-command-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows Command Prompt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macos-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        macOS / Linux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-install-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3️⃣ Install Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-model-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📥 Local Model Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-locallama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ▶️ Running LocaLlama
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="▶️ Running LocaLlama">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optional-runtime-capability-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Runtime Capability Flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#text-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💬 Text Generation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="💬 Text Generation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#advanced-text-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Text Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#images-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🖼️ Images API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎧 Audio API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📚 Document Q&amp;A
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📚 Document Q&amp;A">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#buddy-compact-retrieval-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buddy Compact Retrieval Profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Semantic Search
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-calling-and-web-browsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧰 Function Calling and Web Browsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompt-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Prompt Engineering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗄️ Data Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🗄️ Data Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#local-sqlite-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local SQLite Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-footer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Status Footer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📦 Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#privacy-safety-and-design-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Privacy, Safety, and Design Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧬 Related Applications
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Home</h1>
+
+<p><img alt="" src="img/loca-llama-project.png" /></p>
+<hr />
+<p>Loca is a python application for running local GGUF-based LLMs for text generation,
+document-grounded retrieval, semantic search, prompt engineering, multimodal workflow staging,
+function-calling experimentation, guarded web context ingestion, and SQLite-backed data management.
+It is designed to run local language models through <code>llama-cpp-python</code> while giving analysts direct
+control over model selection, inference parameters, prompt templates, document context, retrieval
+behavior, semantic chunking, local data assets, and model-specific capability gates.</p>
+<p>The application is organized around named local assistants such as Bro, Gipity, Buddy, Boo, Jimi,
+Leeroy, and Nisty. Each assistant is configured through <code>config.py</code>, where its GGUF path, logo,
+base model metadata, description, and allowed application modes are declared.</p>
+<h2 id="key-features">✨ Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local GGUF inference</td>
+<td>Runs configured local GGUF models through <code>llama-cpp-python</code> with context-window, CPU-thread, token, temperature, top-p, top-k, repeat-penalty, and seed controls.</td>
+</tr>
+<tr>
+<td>Multi-model registry</td>
+<td>Selects among Bro, Gipity, Buddy, Boo, Jimi, Leeroy, and Nisty through a centralized <code>MODEL_REGISTRY</code> in <code>config.py</code>.</td>
+</tr>
+<tr>
+<td>Model-specific modes</td>
+<td>Exposes only the modes declared for the selected model, including Text Generation, Images API, Audio API, Document Q&amp;A, Semantic Search, Prompt Engineering, and Data Management.</td>
+</tr>
+<tr>
+<td>Text generation</td>
+<td>Supports chat, reasoning, coding, translation, summarization, extraction, system instructions, prompt templates, chat history, and document context.</td>
+</tr>
+<tr>
+<td>Advanced model capabilities</td>
+<td>Adds gated Thinking, Advanced Coding, and Function Calling controls for models that advertise those capabilities.</td>
+</tr>
+<tr>
+<td>Gipity tool workflows</td>
+<td>Provides app-mediated function-call generation, strict JSON parsing, allowlisted function execution, and guarded web-context ingestion for Gipity.</td>
+</tr>
+<tr>
+<td>Images API mode</td>
+<td>Adds image upload, image preview, prompt capture, image-context buffering, and fail-closed adapter hooks for Jimi and Nisty image workflows.</td>
+</tr>
+<tr>
+<td>Audio API mode</td>
+<td>Adds audio upload, audio preview, transcription/analysis prompt capture, transcript buffering, and fail-closed adapter hooks for Jimi and Nisty audio workflows.</td>
+</tr>
+<tr>
+<td>Persistent chat history</td>
+<td>Saves role/content chat messages to SQLite and reloads history on startup.</td>
+</tr>
+<tr>
+<td>System instructions</td>
+<td>Supports reusable system instructions, prompt templates, preset instructions, and XML-like delimiter conversion.</td>
+</tr>
+<tr>
+<td>Document Q&amp;A</td>
+<td>Uploads PDFs, TXT files, and DOCX files and answers grounded questions over retrieved excerpts.</td>
+</tr>
+<tr>
+<td>Buddy compact retrieval</td>
+<td>Allows Buddy to use Document Q&amp;A and Semantic Search with smaller retrieval windows suitable for a compact 270M model.</td>
+</tr>
+<tr>
+<td>Document actions</td>
+<td>Summarizes active documents, extracts key points, generates outlines, extracts entities, extracts tables, and compares active documents.</td>
+</tr>
+<tr>
+<td>Semantic search</td>
+<td>Builds a semantic index from uploaded files, queries indexed chunks, selects relevant chunks, and routes selected context into Text Generation or Document Q&amp;A.</td>
+</tr>
+<tr>
+<td>sqlite-vec support</td>
+<td>Uses sqlite-vec for document retrieval when available, with fallback cosine similarity over stored vectors.</td>
+</tr>
+<tr>
+<td>Prompt engineering</td>
+<td>Searches, pages, sorts, edits, clones, generates, and applies prompt templates stored in the local <code>Prompts</code> table.</td>
+</tr>
+<tr>
+<td>Data management</td>
+<td>Imports Excel workbooks into SQLite, browses tables, runs CRUD, explores, filters, aggregates, visualizes, administers schema, and runs guarded read-only SQL.</td>
+</tr>
+<tr>
+<td>AI asset governance</td>
+<td>Registers active documents, chunks, embeddings, uploaded image metadata, and local AI assets into SQLite governance tables.</td>
+</tr>
+<tr>
+<td>Fixed status footer</td>
+<td>Displays active mode, model parameters, semantic state, context settings, document count, and runtime information.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="application-modes">🧭 Application Modes<a class="headerlink" href="#application-modes" title="Permanent link">&para;</a></h2>
+<p>LocaLlama is built around a practical local-AI workflow:</p>
+<ul>
+<li>Select a local assistant model and load its configured GGUF path.</li>
+<li>Run instruction-following, reasoning, coding, extraction, translation, and summarization tasks.</li>
+<li>Upload PDF, TXT, or DOCX documents for local document question answering.</li>
+<li>Build semantic indexes from uploaded documents using sentence-transformer embeddings.</li>
+<li>Route retrieved document or semantic chunks into Text Generation.</li>
+<li>Stage image and audio workflows for models that advertise multimodal capability.</li>
+<li>Generate and validate app-mediated function calls.</li>
+<li>Fetch public web pages into bounded local context for Gipity-driven analysis.</li>
+<li>Store chat history, prompts, embeddings, document metadata, chunks, image metadata, and imported
+  data in SQLite.</li>
+<li>Use Prompt Engineering mode to create, edit, clone, search, and apply prompt templates.</li>
+<li>Use Data Management mode to import Excel data, browse tables, run guarded SQL, profile data, and
+  administer local AI-asset tables.</li>
+</ul>
+<p>The current application mode contract is:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Purpose</th>
+<th>Major Controls / Outputs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Text Generation</strong></td>
+<td>Primary local chat and generation interface.</td>
+<td>Task presets, response format, chat history, document context, reasoning controls, coding controls, advanced model capabilities, function schema input, Gipity tools, web context, inference parameters, system instructions, prompt preview, and persisted chat history.</td>
+</tr>
+<tr>
+<td><strong>Images API</strong></td>
+<td>Image upload, preview, prompt capture, image analysis staging, and image-context routing.</td>
+<td>Image uploader, prompt box, model/runtime capability status, future image adapter hook, image response area, send-to-text context actions, and scoped image-state clearing.</td>
+</tr>
+<tr>
+<td><strong>Audio API</strong></td>
+<td>Audio upload, preview, transcription/analysis staging, and audio-context routing.</td>
+<td>Audio uploader, audio preview, transcription/analysis prompt, model/runtime capability status, future audio adapter hook, transcript/response area, send-to-text context actions, and scoped audio-state clearing.</td>
+</tr>
+<tr>
+<td><strong>Document Q&amp;A</strong></td>
+<td>Retrieval-augmented question answering over uploaded documents.</td>
+<td>PDF/TXT/DOCX upload, active document inventory, retrieval controls, chunk size/overlap, grounding toggles, sqlite-vec toggle, fallback cosine search, document actions, parsing controls, and retrieved chunk display.</td>
+</tr>
+<tr>
+<td><strong>Semantic Search</strong></td>
+<td>Build and query a reusable semantic chunk index.</td>
+<td>Upload files, chunk size/overlap, clear/append behavior, top-k search, similarity threshold, selected chunks, send-to-text, send-to-Document-Q&amp;A, save-as-context actions, diagnostics, and index deletion.</td>
+</tr>
+<tr>
+<td><strong>Prompt Engineering</strong></td>
+<td>Manage reusable prompt templates and cascade them into generation modes.</td>
+<td>Search, category inference, sort, pagination, go-to-ID, prompt table, apply to Text Generation, apply to Document Q&amp;A, clone, starter prompt generator, edit/create/delete.</td>
+</tr>
+<tr>
+<td><strong>Data Management</strong></td>
+<td>Manage local SQLite data and AI asset metadata.</td>
+<td>Excel import, table browse, CRUD, profile/explore, filter, aggregate, visualize, schema admin, index creation, AI asset governance, and read-only SQL console.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="supported-models">🤖 Supported Models<a class="headerlink" href="#supported-models" title="Permanent link">&para;</a></h2>
+<p>Model availability is controlled by local environment-variable paths in <code>config.py</code>. A model appears
+in
+the application when its configured path is present and the selected registry entry advertises one
+or more
+supported modes.</p>
+<table>
+<thead>
+<tr>
+<th>Assistant</th>
+<th>Base Model</th>
+<th>Size</th>
+<th>Family</th>
+<th>Primary Role</th>
+<th>Configured Modes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bro</strong></td>
+<td><code>gemma-3-4b-it</code></td>
+<td>4B</td>
+<td>Gemma</td>
+<td>Balanced local assistant for text, document, prompt, semantic, and data workflows.</td>
+<td>Text Generation, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+<tr>
+<td><strong>Gipity</strong></td>
+<td><code>gpt-oss-20b</code></td>
+<td>21B</td>
+<td>GPT-OSS</td>
+<td>Larger reasoning-oriented local assistant for text, document, semantic, function-calling, and guarded web-context workflows.</td>
+<td>Text Generation, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+<tr>
+<td><strong>Buddy</strong></td>
+<td><code>gemma-3-270m-it</code></td>
+<td>0.3B</td>
+<td>Gemma 3</td>
+<td>Compact local assistant using conservative retrieval defaults for Document Q&amp;A and Semantic Search.</td>
+<td>Text Generation, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+<tr>
+<td><strong>Boo</strong></td>
+<td><code>Phi-4-mini-instruct</code></td>
+<td>3.8B</td>
+<td>Phi</td>
+<td>Lightweight reasoning assistant with strong text and document workflow support.</td>
+<td>Text Generation, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+<tr>
+<td><strong>Jimi</strong></td>
+<td><code>gemma-4-E4B-it</code></td>
+<td>4B</td>
+<td>Gemma</td>
+<td>Multimodal-capable local assistant for text, image, audio, document, semantic, prompt, data, thinking, coding, and function-call workflows.</td>
+<td>Text Generation, Images API, Audio API, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+<tr>
+<td><strong>Leeroy</strong></td>
+<td><code>Llama-3.2-1B-Instruct</code></td>
+<td>1B</td>
+<td>Llama</td>
+<td>Small instruction-tuned text assistant for dialogue, summarization, retrieval, and prompt workflows.</td>
+<td>Text Generation, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+<tr>
+<td><strong>Nisty</strong></td>
+<td><code>gemma-4-E4B-it</code></td>
+<td>4B</td>
+<td>Gemma</td>
+<td>Governance/document-oriented multimodal assistant for text, image, audio, document, semantic, prompt, data, thinking, coding, and function-call workflows.</td>
+<td>Text Generation, Images API, Audio API, Document Q&amp;A, Semantic Search, Prompt Engineering, Data Management</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture">🏛 Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Streamlit UI
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ├── Sidebar Model Registry
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    │       ├── config.py MODEL_REGISTRY
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    │       ├── environment-variable GGUF paths
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    │       ├── selected model state
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    │       ├── selected mode state
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    │       └── model capability gates
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    │
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    ├── Text Generation
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    │       ├── llama-cpp-python
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    │       ├── selected local GGUF model
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    │       ├── chat_history table
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    │       ├── Prompts table
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    │       ├── system instructions
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    │       ├── task-specific instruction block
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    │       ├── thinking / coding / function-calling prompt extensions
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    │       └── Gipity tool and web-context controls
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    │
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ├── Images API
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    │       ├── image upload
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    │       ├── image preview
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    │       ├── model capability gate
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    │       ├── runtime adapter gate
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    │       ├── optional analyze_image_with_model adapter
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    │       └── image context routing into Text Generation
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    │
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    ├── Audio API
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    │       ├── audio upload
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    │       ├── audio preview
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    │       ├── model capability gate
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    │       ├── runtime adapter gate
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    │       ├── optional analyze_audio_with_model adapter
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    │       └── audio context routing into Text Generation
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    │
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    ├── Document Q&amp;A
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    │       ├── uploaded PDFs / TXT / DOCX
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    │       ├── PyMuPDF / text extraction
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    │       ├── sentence-transformers embeddings
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    │       ├── sqlite-vec vector table when available
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    │       ├── cosine fallback search
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    │       └── compact Buddy retrieval profile when Buddy is selected
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    │
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    ├── Semantic Search
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    │       ├── chunked uploaded documents
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    │       ├── embeddings table
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    │       ├── vector diagnostics
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    │       ├── selected semantic context
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    │       └── context routing into Text Generation / Document Q&amp;A
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    │
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    ├── Prompt Engineering
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    │       ├── Prompts table
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    │       ├── template metadata
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    │       ├── starter prompt generation
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    │       └── system-instruction cascade
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    │
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    ├── Gipity Tools
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    │       ├── strict JSON function-call generation
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    │       ├── JSON extraction and normalization
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    │       ├── allowlisted function execution
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    │       ├── guarded public HTTP/HTTPS web fetch
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    │       └── tool-grounded final answer generation
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    │
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    └── Data Management
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>            ├── Excel import
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>            ├── CRUD / profiling / visualization
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>            ├── guarded SQL console
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>            └── AI asset governance tables
+</span></code></pre></div>
+<h2 id="repository-structure">🗂 Repository Structure<a class="headerlink" href="#repository-structure" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>LocaLlama/
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├─ app.py                         # Main Streamlit application
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├─ config.py                      # App constants, modes, model registry, paths, logos, help text
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├─ requirements.txt               # Python dependencies
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├─ resources/
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  └─ images/
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│     ├─ loca_project.png
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│     ├─ LocaLlama-streamlit.gif
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│     ├─ loca-llama_logo.png
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│     ├─ bro_logo.png
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│     ├─ gipity_logo.png
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│     ├─ buddy_logo.png
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│     ├─ boo_logo.png
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│     ├─ jimi_logo.png
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│     ├─ leeroy_logo.png
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│     └─ nisty_logo.png
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>├─ stores/
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│  └─ sqlite/
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│     └─ loca.db                  # Chat history, prompts, embeddings, documents, chunks, images
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>├─ models/
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│  └─ *.gguf                      # Optional local model directory depending on environment variables
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>└─ README.md
+</span></code></pre></div>
+<h2 id="system-requirements">⚙️ System Requirements<a class="headerlink" href="#system-requirements" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th style="text-align: right;">Minimum</th>
+<th style="text-align: right;">Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operating system</td>
+<td style="text-align: right;">Windows 10/11 64-bit, Linux, or macOS</td>
+<td style="text-align: right;">Windows 11 64-bit or Linux</td>
+</tr>
+<tr>
+<td>Python</td>
+<td style="text-align: right;">3.10</td>
+<td style="text-align: right;">3.11</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td style="text-align: right;">8 GB</td>
+<td style="text-align: right;">16 GB or more</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td style="text-align: right;">Modern x64 CPU</td>
+<td style="text-align: right;">AVX2-capable CPU with multiple cores</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td style="text-align: right;">5-7 GB free</td>
+<td style="text-align: right;">10+ GB free for models, SQLite assets, and uploaded documents</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td style="text-align: right;">Not required</td>
+<td style="text-align: right;">Optional; current app is CPU-oriented through llama.cpp</td>
+</tr>
+<tr>
+<td>Network</td>
+<td style="text-align: right;">Not required for local text/document workflows</td>
+<td style="text-align: right;">Required only for Gipity web-context fetches or package/model downloads</td>
+</tr>
+</tbody>
+</table>
+<h2 id="installation-setup">🚀 Installation &amp; Setup<a class="headerlink" href="#installation-setup" title="Permanent link">&para;</a></h2>
+<h3 id="1-clone-the-repository">1️⃣ Clone the Repository<a class="headerlink" href="#1-clone-the-repository" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/is-leeroy-jenkins/LocaLlama.git
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>LocaLlama
+</span></code></pre></div>
+<h3 id="2-create-and-activate-a-virtual-environment">2️⃣ Create and Activate a Virtual Environment<a class="headerlink" href="#2-create-and-activate-a-virtual-environment" title="Permanent link">&para;</a></h3>
+<h4 id="windows-powershell">Windows PowerShell<a class="headerlink" href="#windows-powershell" title="Permanent link">&para;</a></h4>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">python</span> <span class="n">-m</span> <span class="n">venv</span> <span class="p">.</span><span class="n">venv</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+</span></code></pre></div>
+<h4 id="windows-command-prompt">Windows Command Prompt<a class="headerlink" href="#windows-command-prompt" title="Permanent link">&para;</a></h4>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python -m venv .venv
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>.venv\Scripts\activate.bat
+</span></code></pre></div>
+<h4 id="macos-linux">macOS / Linux<a class="headerlink" href="#macos-linux" title="Permanent link">&para;</a></h4>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+</span></code></pre></div>
+<h3 id="3-install-dependencies">3️⃣ Install Dependencies<a class="headerlink" href="#3-install-dependencies" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</span></code></pre></div>
+<h2 id="local-model-setup">📥 Local Model Setup<a class="headerlink" href="#local-model-setup" title="Permanent link">&para;</a></h2>
+<p>LocaLlama expects local GGUF model paths to be supplied through environment variables and consumed
+by
+<code>config.py</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Assistant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BRO_LLM_PATH</code></td>
+<td>Bro</td>
+</tr>
+<tr>
+<td><code>GIPITY_LLM_PATH</code></td>
+<td>Gipity</td>
+</tr>
+<tr>
+<td><code>BUDDY_LLM_PATH</code></td>
+<td>Buddy</td>
+</tr>
+<tr>
+<td><code>BOO_LLM_PATH</code></td>
+<td>Boo</td>
+</tr>
+<tr>
+<td><code>JIMI_LLM_PATH</code></td>
+<td>Jimi</td>
+</tr>
+<tr>
+<td><code>LEEROY_LLM_PATH</code></td>
+<td>Leeroy</td>
+</tr>
+<tr>
+<td><code>NISTY_LLM_PATH</code></td>
+<td>Nisty</td>
+</tr>
+</tbody>
+</table>
+<p>Example on Windows PowerShell:</p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nv">$env:BRO_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\bro-3-4b-it-Q4_K_M.gguf&quot;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nv">$env:GIPITY_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\gpt-oss-20b-Q4_K_M.gguf&quot;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nv">$env:BUDDY_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\buddy-gemma-3-270m-it-Q4_K_M.gguf&quot;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nv">$env:BOO_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\boo-phi-4-mini-instruct-Q4_K_M.gguf&quot;</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nv">$env:JIMI_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\jimi-gemma-4-e4b-it-Q4_K_M.gguf&quot;</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nv">$env:LEEROY_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\leeroy-llama-3.2-1b-instruct-Q4_K_M.gguf&quot;</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nv">$env:NISTY_LLM_PATH</span><span class="p">=</span><span class="s2">&quot;C:\Users\you\models\nisty-gemma-4-e4b-it-Q4_K_M.gguf&quot;</span>
+</span></code></pre></div>
+<p>Restart the terminal or IDE after changing environment variables.</p>
+<h2 id="running-locallama">▶️ Running LocaLlama<a class="headerlink" href="#running-locallama" title="Permanent link">&para;</a></h2>
+<p>Run Streamlit through Python so the correct virtual environment is used.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>streamlit<span class="w"> </span>run<span class="w"> </span>app.py
+</span></code></pre></div>
+<p>The application opens in wide layout, renders the LocaLlama subtitle, and exposes the model and mode
+selectors in the sidebar.</p>
+<h3 id="optional-runtime-capability-flags">Optional Runtime Capability Flags<a class="headerlink" href="#optional-runtime-capability-flags" title="Permanent link">&para;</a></h3>
+<p>Image and audio modes are model-gated and runtime-gated. The mode may be visible for Jimi or Nisty,
+but actual multimodal inference requires an image/audio-capable local adapter to be wired into
+<code>app.py</code>.</p>
+<p>Optional config flags may be added later:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">IMAGE_RUNTIME_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">AUDIO_RUNTIME_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">WEB_RUNTIME_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">MULTIMODAL_RUNTIME_NAME</span> <span class="o">=</span> <span class="s1">&#39;custom-local-adapter&#39;</span>
+</span></code></pre></div>
+<p>Without those runtime flags and adapter functions, Image Mode and Audio Mode fail closed with a
+clear
+status message instead of raising a runtime error.</p>
+<h2 id="text-generation">💬 Text Generation<a class="headerlink" href="#text-generation" title="Permanent link">&para;</a></h2>
+<p>Text Generation is the primary local chat interface. It uses chat history, system instructions,
+task-specific prompt blocks, optional semantic context, optional document context, and
+model-specific
+capability gates to construct a local model prompt.</p>
+<table>
+<thead>
+<tr>
+<th>Control Group</th>
+<th>Controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task Preset</td>
+<td>Chat, Reasoning, Coding, Translation, Summarization, Extraction.</td>
+</tr>
+<tr>
+<td>Response Format</td>
+<td>Plain Text, Markdown, Bullet Summary, JSON.</td>
+</tr>
+<tr>
+<td>Conversation Context</td>
+<td>Use Conversation History, Use Document Context.</td>
+</tr>
+<tr>
+<td>Reasoning Controls</td>
+<td>Reasoning Depth, Answer Only, Use Self-Check, Prefer Deterministic Reasoning.</td>
+</tr>
+<tr>
+<td>Coding Controls</td>
+<td>Code Language, Coding Task, Include Comments, Use Editor Format, Emit Fenced Code, Translation Target Language.</td>
+</tr>
+<tr>
+<td>Advanced Model Capabilities</td>
+<td>Enable Thinking, Thinking Effort, Reasoning Summary, Enable Advanced Coding, Include Test Strategy, Explain Implementation, Enable Function Calling, Function Call Prompt, Function Schema JSON.</td>
+</tr>
+<tr>
+<td>Gipity Tools and Web Browsing</td>
+<td>Generate function-call JSON, execute allowlisted tools, fetch public web context, send web context to Text Generation, generate tool-grounded final answer.</td>
+</tr>
+<tr>
+<td>Response Controls</td>
+<td>Temperature, Top-P, Top-K, Use Grounding.</td>
+</tr>
+<tr>
+<td>Inference Settings</td>
+<td>Repeat Window, Repeat Penalty, Presence Penalty, Frequency Penalty.</td>
+</tr>
+<tr>
+<td>Context Controls</td>
+<td>Context Window, CPU Threads, Max Tokens, Random Seed.</td>
+</tr>
+<tr>
+<td>System Instructions</td>
+<td>Free-text instruction area, template selector, clear, XML-like conversion, Markdown conversion, preset application, effective prompt preview.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="advanced-text-capabilities">Advanced Text Capabilities<a class="headerlink" href="#advanced-text-capabilities" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Models</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thinking</td>
+<td>Jimi, Nisty</td>
+<td>Adds model-gated thinking-effort instructions while avoiding exposure of hidden chain-of-thought.</td>
+</tr>
+<tr>
+<td>Advanced Coding</td>
+<td>Jimi, Nisty</td>
+<td>Adds code-generation, test-strategy, and implementation-explanation controls.</td>
+</tr>
+<tr>
+<td>Function Calling</td>
+<td>Jimi, Nisty, Gipity</td>
+<td>Allows strict JSON function-call generation against user-supplied or default schemas.</td>
+</tr>
+<tr>
+<td>Gipity Web Context</td>
+<td>Gipity</td>
+<td>Fetches public HTTP/HTTPS web pages into bounded context for model-grounded answers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="images-api">🖼️ Images API<a class="headerlink" href="#images-api" title="Permanent link">&para;</a></h2>
+<p>Images API stages image analysis workflows for models configured with image capability, currently
+Jimi
+and Nisty. The mode is designed to be safe even when the local runtime is still text-only.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model gate</td>
+<td>Only models configured for <code>IMAGE_MODE</code> and recognized by the capability layer expose active image workflows.</td>
+</tr>
+<tr>
+<td>Runtime gate</td>
+<td>The app checks whether an image-capable runtime adapter is configured before attempting inference.</td>
+</tr>
+<tr>
+<td>Upload</td>
+<td>Accepts PNG, JPG, JPEG, WEBP, and BMP files.</td>
+</tr>
+<tr>
+<td>Preview</td>
+<td>Renders the uploaded image in Streamlit and displays file size.</td>
+</tr>
+<tr>
+<td>Prompt</td>
+<td>Captures user instructions for image captioning, description, extraction, or analysis.</td>
+</tr>
+<tr>
+<td>Adapter hook</td>
+<td>Calls <code>analyze_image_with_model</code> only if that callable exists in <code>app.py</code>.</td>
+</tr>
+<tr>
+<td>Context routing</td>
+<td>Can send image analysis text into shared Text Generation document context.</td>
+</tr>
+<tr>
+<td>Fail-closed behavior</td>
+<td>If no adapter is present, the app displays a status message instead of crashing.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional adapter signatures:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_image_with_model</span><span class="p">(</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">image_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></code></pre></div>
+<p>or:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_image_with_model</span><span class="p">(</span> <span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></code></pre></div>
+<h2 id="audio-api">🎧 Audio API<a class="headerlink" href="#audio-api" title="Permanent link">&para;</a></h2>
+<p>Audio API stages transcription, translation, summarization, and audio-analysis workflows for models
+configured with audio capability, currently Jimi and Nisty. The mode is safe to expose before a true
+audio
+runtime adapter is wired.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model gate</td>
+<td>Only models configured for <code>AUDIO_MODE</code> and recognized by the capability layer expose active audio workflows.</td>
+</tr>
+<tr>
+<td>Runtime gate</td>
+<td>The app checks whether an audio-capable runtime adapter is configured before attempting inference.</td>
+</tr>
+<tr>
+<td>Upload</td>
+<td>Accepts WAV, MP3, M4A, FLAC, and OGG files.</td>
+</tr>
+<tr>
+<td>Preview</td>
+<td>Renders an audio player and displays file metadata.</td>
+</tr>
+<tr>
+<td>Prompt</td>
+<td>Captures transcription, translation, summarization, or analysis instructions.</td>
+</tr>
+<tr>
+<td>Adapter hook</td>
+<td>Calls <code>analyze_audio_with_model</code> only if that callable exists in <code>app.py</code>.</td>
+</tr>
+<tr>
+<td>Transcript state</td>
+<td>Stores audio output in <code>audio_transcript</code>, <code>audio_response</code>, and <code>audio_context_buffer</code>.</td>
+</tr>
+<tr>
+<td>Context routing</td>
+<td>Can send transcript or audio analysis text into shared Text Generation document context.</td>
+</tr>
+<tr>
+<td>Fail-closed behavior</td>
+<td>If no adapter is present, the app displays a status message instead of crashing.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional adapter signatures:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_audio_with_model</span><span class="p">(</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">audio_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">audio_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></code></pre></div>
+<p>or:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_audio_with_model</span><span class="p">(</span> <span class="n">audio_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></code></pre></div>
+<h2 id="document-qa">📚 Document Q&amp;A<a class="headerlink" href="#document-qa" title="Permanent link">&para;</a></h2>
+<p>Document Q&amp;A provides local retrieval-augmented answering over uploaded files. The app accepts PDF,
+TXT, and DOCX uploads, extracts text, chunks documents, indexes chunks, retrieves relevant excerpts,
+and routes document-grounded prompts through the same local generation pipeline.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document Loader</td>
+<td>Upload one or more PDF, TXT, or DOCX documents and select active documents.</td>
+</tr>
+<tr>
+<td>Preview</td>
+<td>Renders PDFs with Streamlit where possible or shows extracted text previews.</td>
+</tr>
+<tr>
+<td>Active Document Inventory</td>
+<td>Displays file name, byte size, text length, chunk count, and loaded state.</td>
+</tr>
+<tr>
+<td>Retrieval Controls</td>
+<td>Chunks to retrieve, chunk size, chunk overlap, show retrieved chunks.</td>
+</tr>
+<tr>
+<td>Grounding Controls</td>
+<td>Require grounding and answer from excerpts only.</td>
+</tr>
+<tr>
+<td>Search Backend</td>
+<td>Prefer sqlite-vec, with optional fallback cosine search.</td>
+</tr>
+<tr>
+<td>Document Actions</td>
+<td>Answer Question, Summarize Active Document, Extract Key Points, Generate Outline, Extract Entities, Extract Tables, Compare Active Documents.</td>
+</tr>
+<tr>
+<td>Parsing Controls</td>
+<td>Enable OCR, prefer native PDF text, include page markers, show diagnostics.</td>
+</tr>
+<tr>
+<td>Buddy Profile</td>
+<td>Applies compact retrieval defaults when Buddy is selected to reduce prompt size and improve stability.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="buddy-compact-retrieval-profile">Buddy Compact Retrieval Profile<a class="headerlink" href="#buddy-compact-retrieval-profile" title="Permanent link">&para;</a></h3>
+<p>Buddy is configured for Document Q&amp;A and Semantic Search, but it uses a smaller retrieval profile
+because
+it is a compact 270M model.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th style="text-align: right;">Buddy Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retrieved chunks</td>
+<td style="text-align: right;">3</td>
+<td>Keeps prompt context compact.</td>
+</tr>
+<tr>
+<td>Retrieval chunk size</td>
+<td style="text-align: right;">800</td>
+<td>Reduces excerpt length.</td>
+</tr>
+<tr>
+<td>Retrieval chunk overlap</td>
+<td style="text-align: right;">120</td>
+<td>Preserves continuity without unnecessary context bloat.</td>
+</tr>
+<tr>
+<td>Semantic top-k</td>
+<td style="text-align: right;">4</td>
+<td>Limits semantic handoff size.</td>
+</tr>
+<tr>
+<td>Semantic chunk size</td>
+<td style="text-align: right;">800</td>
+<td>Keeps indexed chunks compact.</td>
+</tr>
+<tr>
+<td>Semantic chunk overlap</td>
+<td style="text-align: right;">120</td>
+<td>Maintains retrieval continuity.</td>
+</tr>
+<tr>
+<td>Grounding required</td>
+<td style="text-align: right;">True</td>
+<td>Reduces unsupported answer generation.</td>
+</tr>
+<tr>
+<td>Answer from excerpts only</td>
+<td style="text-align: right;">True</td>
+<td>Keeps document answers tied to retrieved text.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="semantic-search">🔍 Semantic Search<a class="headerlink" href="#semantic-search" title="Permanent link">&para;</a></h2>
+<p>Semantic Search builds a reusable semantic index from uploaded PDF, TXT, or DOCX files. It stores
+chunk vectors in the local SQLite <code>embeddings</code> table and allows ranked semantic retrieval.</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Controls / Outputs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Index Builder</td>
+<td>Upload files, chunk size, chunk overlap, clear existing index, append to existing index, show diagnostics, build index.</td>
+</tr>
+<tr>
+<td>Diagnostics</td>
+<td>Indexed documents, indexed chunks, vector dimension, semantic status.</td>
+</tr>
+<tr>
+<td>Semantic Query</td>
+<td>Query text, top-k results, minimum similarity, group by document.</td>
+</tr>
+<tr>
+<td>Results</td>
+<td>Selectable rows with rank, score, chunk text, and length.</td>
+</tr>
+<tr>
+<td>Actions</td>
+<td>Send selected chunks to Text Generation, send selected chunks to Document Q&amp;A, save selected chunks as prompt context.</td>
+</tr>
+<tr>
+<td>Maintenance</td>
+<td>Delete index, recompute diagnostics, clear query results.</td>
+</tr>
+<tr>
+<td>Safety</td>
+<td>Guards database read/write failures, missing vector tables, malformed vectors, and embedding-dimension mismatches.</td>
+</tr>
+</tbody>
+</table>
+<p>Semantic Search is app-level retrieval infrastructure. The selected LLM does not perform embedding
+generation directly. Instead, embeddings are created by the configured embedding layer, and the
+selected
+assistant model reads or reasons over retrieved chunks.</p>
+<h2 id="function-calling-and-web-browsing">🧰 Function Calling and Web Browsing<a class="headerlink" href="#function-calling-and-web-browsing" title="Permanent link">&para;</a></h2>
+<p>Function Calling and Web Browsing are app-mediated workflows. The model can request a function call,
+but LocaLlama validates, normalizes, and executes only allowlisted functions.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Function-call generation</td>
+<td>Asks the selected model to produce one strict JSON object using the shape <code>{"name":"function_name","arguments":{...}}</code>.</td>
+</tr>
+<tr>
+<td>JSON extraction</td>
+<td>Extracts valid JSON even if the model accidentally wraps output in markdown or prose.</td>
+</tr>
+<tr>
+<td>Function normalization</td>
+<td>Converts model output into the app contract.</td>
+</tr>
+<tr>
+<td>Allowlisted execution</td>
+<td>Executes only functions explicitly allowed by the application.</td>
+</tr>
+<tr>
+<td>Tool-grounded final answer</td>
+<td>Feeds the validated tool result back into the model for a grounded final response.</td>
+</tr>
+<tr>
+<td>Web fetch</td>
+<td>Fetches public HTTP/HTTPS pages into bounded readable text context.</td>
+</tr>
+<tr>
+<td>Private-network guard</td>
+<td>Blocks localhost, private IPs, loopback, link-local, reserved, multicast, and non-HTTP schemes.</td>
+</tr>
+<tr>
+<td>Optional domain guard</td>
+<td>Restricts URL fetches to a user-specified allowed domain when provided.</td>
+</tr>
+</tbody>
+</table>
+<p>Allowlisted functions:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>summarize_text</code></td>
+<td>Deterministically summarizes supplied text into bullet points.</td>
+</tr>
+<tr>
+<td><code>extract_keywords</code></td>
+<td>Extracts simple frequency-ranked keywords from supplied text.</td>
+</tr>
+<tr>
+<td><code>web_browse_url</code></td>
+<td>Fetches public web text for model grounding.</td>
+</tr>
+</tbody>
+</table>
+<p>Example function-call JSON:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;web_browse_url&quot;</span><span class="p">,</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">&quot;arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">        </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://example.com&quot;</span><span class="p">,</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">        </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize the page in five bullets.&quot;</span><span class="p">,</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">        </span><span class="nt">&quot;allowed_domain&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">        </span><span class="nt">&quot;max_chars&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12000</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="prompt-engineering">📝 Prompt Engineering<a class="headerlink" href="#prompt-engineering" title="Permanent link">&para;</a></h2>
+<p>Prompt Engineering manages reusable prompt templates in SQLite. It can search, sort, page, edit,
+clone, generate, and cascade prompts into other modes.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Search and filter</td>
+<td>Search captions, names, and prompt text; infer categories from prompt content.</td>
+</tr>
+<tr>
+<td>Pagination</td>
+<td>Browse prompt records in pages.</td>
+</tr>
+<tr>
+<td>Go to ID</td>
+<td>Jump directly to a prompt by primary key.</td>
+</tr>
+<tr>
+<td>Category inference</td>
+<td>Classifies prompt records into General Chat, Reasoning, Coding, Translation, Summarization, Extraction, Document Extraction, OCR, and JSON Output.</td>
+</tr>
+<tr>
+<td>Prompt actions</td>
+<td>Apply to Text Generation, apply to Document Q&amp;A, clone as new template, generate starter prompt.</td>
+</tr>
+<tr>
+<td>Prompt generator</td>
+<td>Drafts a prompt template from task type, response format, language, goal, constraints, and style.</td>
+</tr>
+<tr>
+<td>Edit surface</td>
+<td>Create, update, delete, and clear prompt records.</td>
+</tr>
+<tr>
+<td>Cascade</td>
+<td>Optionally cascade selected prompts into shared System Instructions and task settings.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="data-management">🗄️ Data Management<a class="headerlink" href="#data-management" title="Permanent link">&para;</a></h2>
+<p>Data Management operates on the local SQLite database and exposes both general table operations and
+AI asset governance workflows.</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>📥 Import</strong></td>
+<td>Import Excel workbooks into SQLite tables and register active AI assets.</td>
+</tr>
+<tr>
+<td><strong>🗂 Browse</strong></td>
+<td>Browse selected SQLite tables.</td>
+</tr>
+<tr>
+<td><strong>💉 CRUD</strong></td>
+<td>Insert, update, and delete rows with type-aware widgets.</td>
+</tr>
+<tr>
+<td><strong>📊 Explore</strong></td>
+<td>Page through table records.</td>
+</tr>
+<tr>
+<td><strong>🔎 Filter</strong></td>
+<td>Filter table rows by column substring.</td>
+</tr>
+<tr>
+<td><strong>🧮 Aggregate</strong></td>
+<td>Compute SUM, AVG, and COUNT over numeric columns.</td>
+</tr>
+<tr>
+<td><strong>📈 Visualize</strong></td>
+<td>Render Plotly histograms for numeric columns.</td>
+</tr>
+<tr>
+<td><strong>⚙ Admin</strong></td>
+<td>Refresh asset counts, rebuild active document asset rows, purge orphaned AI assets, profile tables, drop tables, create indexes, create custom tables, inspect schema, and alter tables.</td>
+</tr>
+<tr>
+<td><strong>🧠 SQL</strong></td>
+<td>Run guarded read-only SQL queries and export results to CSV.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="local-sqlite-tables">Local SQLite Tables<a class="headerlink" href="#local-sqlite-tables" title="Permanent link">&para;</a></h3>
+<p>The application initializes core local tables when the database is created.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chat_history</code></td>
+<td>Persistent local chat history.</td>
+</tr>
+<tr>
+<td><code>embeddings</code></td>
+<td>Semantic-search chunk vectors.</td>
+</tr>
+<tr>
+<td><code>Prompts</code></td>
+<td>Prompt templates and metadata.</td>
+</tr>
+<tr>
+<td><code>documents</code></td>
+<td>Registered document metadata.</td>
+</tr>
+<tr>
+<td><code>document_chunks</code></td>
+<td>Registered document chunks.</td>
+</tr>
+<tr>
+<td><code>document_embeddings</code></td>
+<td>Registered document embedding metadata.</td>
+</tr>
+<tr>
+<td><code>images</code></td>
+<td>Registered uploaded image metadata.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="status-footer">📊 Status Footer<a class="headerlink" href="#status-footer" title="Permanent link">&para;</a></h2>
+<p>LocaLlama renders a fixed footer showing the current operating state.</p>
+<table>
+<thead>
+<tr>
+<th>Footer Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mode</td>
+<td>Current application mode.</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Selected assistant model.</td>
+</tr>
+<tr>
+<td>Temp / Top-P / Top-K</td>
+<td>Active generation sampling settings.</td>
+</tr>
+<tr>
+<td>Frequency / Presence / Repeat</td>
+<td>Active penalty controls.</td>
+</tr>
+<tr>
+<td>Repeat Window</td>
+<td>Repetition penalty window.</td>
+</tr>
+<tr>
+<td>Max Tokens</td>
+<td>Active maximum generation token setting.</td>
+</tr>
+<tr>
+<td>Context</td>
+<td>Active context window.</td>
+</tr>
+<tr>
+<td>Threads</td>
+<td>Active CPU thread count.</td>
+</tr>
+<tr>
+<td>Semantic</td>
+<td>Whether semantic context is enabled.</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td>Number of shared basic document context entries.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="requirements">📦 Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<p>The table below reflects the active imports and runtime features used by the current application.
+Use
+<code>requirements.txt</code> as the installation source of truth when version pins are present.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Package / Import</th>
+<th>Purpose</th>
+<th>Used By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td><code>python&gt;=3.10</code></td>
+<td>Runtime for modern type hints and Streamlit execution.</td>
+<td>Entire application</td>
+</tr>
+<tr>
+<td>Streamlit</td>
+<td><code>streamlit</code></td>
+<td>Web UI framework, chat UI, file upload, dataframes, tabs, expanders, metrics, and session state.</td>
+<td>All modes</td>
+</tr>
+<tr>
+<td>llama-cpp-python</td>
+<td><code>llama_cpp</code></td>
+<td>Local GGUF model loading and inference.</td>
+<td>Text Generation and Document Q&amp;A generation path</td>
+</tr>
+<tr>
+<td>NumPy</td>
+<td><code>numpy</code></td>
+<td>Vector math, cosine similarity, embedding arrays, decoded vector blobs.</td>
+<td>Document Q&amp;A, Semantic Search</td>
+</tr>
+<tr>
+<td>Pandas</td>
+<td><code>pandas</code></td>
+<td>Dataframes, Excel import, SQL query results, prompt tables, asset inventory, visualization source data.</td>
+<td>Prompt Engineering, Data Management, Document Q&amp;A, Semantic Search</td>
+</tr>
+<tr>
+<td>Plotly Express</td>
+<td><code>plotly.express</code></td>
+<td>Interactive visualizations over SQLite table data.</td>
+<td>Data Management Visualize tab</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td><code>sqlite3</code></td>
+<td>Local persistence for chat history, prompts, embeddings, documents, chunks, images, imported tables, and SQL console.</td>
+<td>All persistence workflows</td>
+</tr>
+<tr>
+<td>sqlite-vec</td>
+<td><code>sqlite_vec</code></td>
+<td>Optional vector-table backend for document retrieval.</td>
+<td>Document Q&amp;A vector search</td>
+</tr>
+<tr>
+<td>sentence-transformers</td>
+<td><code>sentence_transformers</code></td>
+<td>Local embedding model loading through <code>SentenceTransformer('all-MiniLM-L6-v2')</code>.</td>
+<td>Document Q&amp;A and Semantic Search</td>
+</tr>
+<tr>
+<td>PyMuPDF</td>
+<td><code>fitz</code> / <code>pymupdf</code></td>
+<td>Native PDF text extraction and PDF preview support where available.</td>
+<td>Document Q&amp;A document parsing</td>
+</tr>
+<tr>
+<td>OpenPyXL</td>
+<td><code>openpyxl</code></td>
+<td>Excel workbook reading through pandas.</td>
+<td>Data Management Import</td>
+</tr>
+<tr>
+<td>python-docx</td>
+<td><code>python-docx</code></td>
+<td>DOCX text extraction when supported by document parsing helpers.</td>
+<td>Document Q&amp;A uploads</td>
+</tr>
+<tr>
+<td>Pillow</td>
+<td><code>pillow</code></td>
+<td>Image metadata and image-handling support.</td>
+<td>Images API and Data Management image registration</td>
+</tr>
+<tr>
+<td>urllib</td>
+<td>Python standard library</td>
+<td>Public HTTP/HTTPS fetches for guarded web context.</td>
+<td>Gipity Tools and Web Browsing</td>
+</tr>
+<tr>
+<td>ipaddress</td>
+<td>Python standard library</td>
+<td>Blocks private, local, loopback, reserved, and link-local web targets.</td>
+<td>Gipity Tools and Web Browsing</td>
+</tr>
+<tr>
+<td>socket</td>
+<td>Python standard library</td>
+<td>Resolves hostnames before web fetch safety checks.</td>
+<td>Gipity Tools and Web Browsing</td>
+</tr>
+<tr>
+<td>json</td>
+<td>Python standard library</td>
+<td>Parses function-call JSON.</td>
+<td>Function Calling</td>
+</tr>
+<tr>
+<td>regex / re</td>
+<td><code>re</code> / optional <code>regex</code></td>
+<td>Prompt conversion, SQL safety checks, identifier sanitization, HTML cleanup, and text normalization.</td>
+<td>Utilities, Prompt Engineering, Data Management, Web Browsing</td>
+</tr>
+<tr>
+<td>hashlib</td>
+<td>Python standard library</td>
+<td>Stable fingerprints for documents, chunks, and uploaded image metadata.</td>
+<td>Document Q&amp;A and AI asset governance</td>
+</tr>
+<tr>
+<td>pathlib</td>
+<td>Python standard library</td>
+<td>Model path and filesystem path handling.</td>
+<td>Model loading and local paths</td>
+</tr>
+<tr>
+<td>base64</td>
+<td>Python standard library</td>
+<td>Image/base64 helper support.</td>
+<td>UI/image utilities</td>
+</tr>
+</tbody>
+</table>
+<h2 id="privacy-safety-and-design-philosophy">🔒 Privacy, Safety, and Design Philosophy<a class="headerlink" href="#privacy-safety-and-design-philosophy" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local-first inference</td>
+<td>Text generation runs through local GGUF models when configured paths are available.</td>
+</tr>
+<tr>
+<td>Local persistence</td>
+<td>Chat history, prompts, embeddings, documents, chunks, and image metadata are stored in SQLite.</td>
+</tr>
+<tr>
+<td>Inspectable retrieval</td>
+<td>Retrieved document and semantic chunks can be shown before or after answers.</td>
+</tr>
+<tr>
+<td>Grounding controls</td>
+<td>Document Q&amp;A can require grounding and answer only from excerpts.</td>
+</tr>
+<tr>
+<td>Compact-model safety</td>
+<td>Buddy uses smaller retrieval defaults to avoid overloading a 270M model.</td>
+</tr>
+<tr>
+<td>SQL safety</td>
+<td>SQL console blocks mutation statements and permits guarded read-only query forms.</td>
+</tr>
+<tr>
+<td>Tool safety</td>
+<td>Function Calling executes only allowlisted local functions.</td>
+</tr>
+<tr>
+<td>Web safety</td>
+<td>Web browsing permits public HTTP/HTTPS only and blocks private/local network targets.</td>
+</tr>
+<tr>
+<td>Multimodal fail-closed behavior</td>
+<td>Image and Audio modes display runtime-status messages unless actual adapters are wired.</td>
+</tr>
+<tr>
+<td>Operational transparency</td>
+<td>Footer summarizes active mode and generation parameters.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-applications">🧬 Related Applications<a class="headerlink" href="#related-applications" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Leeroy</td>
+<td>Small instruction assistant for local dialogue and retrieval workflows.</td>
+</tr>
+<tr>
+<td>Bro</td>
+<td>Balanced local instruction and reasoning assistant.</td>
+</tr>
+<tr>
+<td>Gipity</td>
+<td>Larger reasoning-oriented assistant with function-calling and web-context workflows.</td>
+</tr>
+<tr>
+<td>Buddy</td>
+<td>Compact local assistant for lightweight text and conservative retrieval.</td>
+</tr>
+<tr>
+<td>Boo</td>
+<td>Lightweight reasoning assistant based on Phi-style local inference.</td>
+</tr>
+<tr>
+<td>Jimi</td>
+<td>Multimodal-capable local assistant for text, image, audio, coding, and thinking workflows.</td>
+</tr>
+<tr>
+<td>Nisty</td>
+<td>Governance/document-oriented multimodal assistant.</td>
+</tr>
+<tr>
+<td>Chonky</td>
+<td>Text-processing, tokenization, embeddings, and vector-persistence pipeline.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.tabs.link"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="assets/js/loca.js"></script>
+      
+    
+  </body>
+</html>
