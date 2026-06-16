@@ -1,22 +1,4 @@
-###### LocaLlama
-
-![](https://github.com/is-leeroy-jenkins/Loca/blob/main/resources/images/loca-llama_project.png)
-
-<p align="center">
-  <a href="#-key-features">Features</a> ·
-  <a href="#-application-modes">Modes</a> ·
-  <a href="#-supported-models">Models</a> ·
-  <a href="#-installation--setup">Install</a> ·
-  <a href="#-configuration">Configuration</a> ·
-  <a href="#-text-generation">Text</a> ·
-  <a href="#-images-api">Images</a> ·
-  <a href="#-audio-api">Audio</a> ·
-  <a href="#-document-qa">RAG</a> ·
-  <a href="#-semantic-search">Search</a> ·
-  <a href="#-prompt-engineering">Prompts</a> ·
-  <a href="#-data-management">Data</a> ·
-  <a href="#-requirements">Requirements</a>
-</p>
+![](./img/loca-llama-project.png)
 
 ___
 
@@ -30,20 +12,6 @@ behavior, semantic chunking, local data assets, and model-specific capability ga
 The application is organized around named local assistants such as Bro, Gipity, Buddy, Boo, Jimi,
 Leeroy, and Nisty. Each assistant is configured through `config.py`, where its GGUF path, logo,
 base model metadata, description, and allowed application modes are declared.
-
-## 🎥 Demo
-
-![](https://github.com/is-leeroy-jenkins/Loca/blob/main/resources/images/loca-demo.gif)
-
-## 🕸️ Streamlit Web
-
-[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit\&logoColor=white)](https://localoca.streamlit.app/)
-
-![](https://github.com/is-leeroy-jenkins/LocaLlama/blob/main/resources/images/Loca-streamlit.gif)
-
-LocaLlama uses Streamlit to provide an interactive local-AI console with sidebar model selection,
-mode selection, parameter controls, upload workflows, persisted chat, database tools, and status
-visibility.
 
 ## ✨ Key Features
 
@@ -308,42 +276,6 @@ python -m streamlit run app.py
 
 The application opens in wide layout, renders the LocaLlama subtitle, and exposes the model and mode
 selectors in the sidebar.
-
-## 🔧 Configuration
-
-LocaLlama reads runtime configuration from `config.py` and Streamlit session state.
-
-| Configuration Item             | Purpose                                                                                            |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `cfg.APP_TITLE`                | Streamlit browser/page title.                                                                      |
-| `cfg.APP_SUBTITLE`             | Startup caption displayed under page configuration.                                                |
-| `cfg.BASE_DIR`                 | Application base directory.                                                                        |
-| `cfg.DB_PATH`                  | SQLite database path used for chat, prompts, embeddings, documents, chunks, and images.            |
-| `cfg.DEFAULT_CTX`              | Default model context window.                                                                      |
-| `cfg.CORES`                    | Maximum CPU thread count exposed in the UI.                                                        |
-| `cfg.FAVICON`                  | Streamlit page icon.                                                                               |
-| `cfg.LOGO`                     | Default application logo.                                                                          |
-| `cfg.BRO_LOGO`                 | Bro model logo.                                                                                    |
-| `cfg.GIPITY_LOGO`              | Gipity model logo.                                                                                 |
-| `cfg.BUDDY_LOGO`               | Buddy model logo.                                                                                  |
-| `cfg.BOO_LOGO`                 | Boo model logo.                                                                                    |
-| `cfg.JIMI_LOGO`                | Jimi model logo.                                                                                   |
-| `cfg.LEEROY_LOGO`              | Leeroy model logo.                                                                                 |
-| `cfg.NISTY_LOGO`               | Nisty model logo.                                                                                  |
-| `cfg.TEXT_MODE`                | Text Generation mode label.                                                                        |
-| `cfg.IMAGE_MODE`               | Images API mode label.                                                                             |
-| `cfg.AUDIO_MODE`               | Audio API mode label.                                                                              |
-| `cfg.DOCQNA_MODE`              | Document Q&A mode label.                                                                           |
-| `cfg.SEMANTIC_MODE`            | Semantic Search mode label.                                                                        |
-| `cfg.PROMPT_MODE`              | Prompt Engineering mode label.                                                                     |
-| `cfg.DATA_MODE`                | Data Management mode label.                                                                        |
-| `cfg.MODES`                    | Application mode list.                                                                             |
-| `cfg.MODEL_REGISTRY`           | Assistant model metadata, model paths, logos, base model names, descriptions, and supported modes. |
-| `cfg.AUDIO_API`                | Help text for Audio API mode.                                                                      |
-| `cfg.IMAGES_API`               | Help text for Images API mode.                                                                     |
-| `cfg.XML_BLOCK_PATTERN`        | XML-like prompt delimiter pattern used by conversion utilities.                                    |
-| `cfg.MARKDOWN_HEADING_PATTERN` | Markdown heading pattern used by prompt conversion utilities.                                      |
-| `cfg.BLUE_DIVIDER`             | Shared divider styling.                                                                            |
 
 ### Optional Runtime Capability Flags
 
@@ -670,10 +602,3 @@ Use
 | Jimi        | Multimodal-capable local assistant for text, image, audio, coding, and thinking workflows. |
 | Nisty       | Governance/document-oriented multimodal assistant.                                         |
 | Chonky      | Text-processing, tokenization, embeddings, and vector-persistence pipeline.                |
-
-## 📜 License
-
-This application is provided for personal, research, and open-source use. Refer to the project and
-model repositories for application and model-specific licensing terms.
-
-
