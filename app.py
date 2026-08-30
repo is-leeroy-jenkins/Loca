@@ -6828,16 +6828,6 @@ if mode == 'Text Generation':
 		# Expander — Mind Controls
 		# ------------------------------------------------------------------
 		with st.expander( label='Mind Controls', icon='🧠', expanded=False ):
-			# ------------------------------------------------------------------
-			# Text Generation reset request processing.
-			#
-			# Important:
-			# ---------
-			# Widget-owned keys must be reset before their widgets are
-			# instantiated in this script pass. Buttons below only set the pending
-			# request key. The actual reset is processed here at the top of this
-			# expander before any controls are created.
-			# ------------------------------------------------------------------
 			text_reset_defaults: Dict[ str, Dict[ str, Any ] ] = {
 					'task_preset_reset':
 						{
@@ -6902,11 +6892,9 @@ if mode == 'Text Generation':
 				None
 				"""
 				st.session_state[ 'pending_text_generation_reset' ] = str( reset_name or '' )
-			
 			pending_text_reset = st.session_state.pop( 'pending_text_generation_reset', None )
 			if pending_text_reset:
 				reset_values = text_reset_defaults.get( str( pending_text_reset ), { } )
-				
 				if isinstance( reset_values, dict ):
 					for reset_key, reset_value in reset_values.items( ):
 						st.session_state[ reset_key ] = reset_value
@@ -6919,16 +6907,8 @@ if mode == 'Text Generation':
 					gap='medium' )
 				
 				with task_c1:
-					st.selectbox( label='Task Type',
-						options=[
-								'Chat',
-								'Reasoning',
-								'Coding',
-								'Translation',
-								'Summarization',
-								'Extraction'
-						],
-						key='task_preset' )
+					st.selectbox( label='Task Type', options=[ 'Chat', 'Reasoning', 'Coding',
+							'Translation', 'Summarization', 'Extraction' ], key='task_preset' )
 				
 				with task_c2:
 					st.selectbox( label='Response Format',
@@ -6969,11 +6949,9 @@ if mode == 'Text Generation':
 						key='use_self_check' )
 				
 				with reason_c4:
-					st.toggle(
-						label='Prefer Deterministic Reasoning',
-						value=bool( st.session_state.get( 'deterministic_reasoning', False ) ),
-						key='deterministic_reasoning'
-					)
+					st.toggle( label='Prefer Deterministic Reasoning', value=bool(
+						st.session_state.get( 'deterministic_reasoning', False ) ),
+						key='deterministic_reasoning' )
 				
 				st.button( label='Reset', key='reasoning_controls_reset',
 					width='stretch', on_click=request_text_generation_reset,
@@ -6987,16 +6965,8 @@ if mode == 'Text Generation':
 					border=True, gap='medium' )
 				
 				with code_c1:
-					st.selectbox( label='Code Language',
-						options=[
-								'Python',
-								'C#',
-								'SQL',
-								'VBA',
-								'JavaScript',
-								'Markdown'
-						],
-						key='coding_language' )
+					st.selectbox( label='Code Language', options=[ 'Python', 'C#', 'SQL', 'VBA',
+							'JavaScript', 'Markdown' ], key='coding_language' )
 				
 				with code_c2:
 					st.selectbox( label='Coding Task',
@@ -7094,31 +7064,20 @@ if mode == 'Text Generation':
 						key='function_schema_text',
 						disabled=not model_supports_capability( 'function_calling' ) )
 				
-				status_rows: List[ Dict[ str, Any ] ] = [
-						{
-								'Capability': 'Thinking',
-								'Enabled': bool( st.session_state.get(
-									'thinking_mode_enabled', False ) ),
-								'Supported': bool( capabilities.get( 'thinking', False ) )
-						},
-						{
-								'Capability': 'Advanced Coding',
-								'Enabled': bool( st.session_state.get(
-									'coding_mode_enabled', False ) ),
-								'Supported': bool( capabilities.get( 'coding', False ) )
-						},
-						{
-								'Capability': 'Function Calling',
-								'Enabled': bool( st.session_state.get(
-									'function_call_enabled', False ) ),
-								'Supported': bool( capabilities.get( 'function_calling', False ) )
-						},
-						{
-								'Capability': 'Web Browsing',
-								'Enabled': False,
-								'Supported': bool( capabilities.get( 'web_browsing', False ) )
-						}
-				]
+				status_rows: List[ Dict[ str, Any ] ] = [ { 'Capability': 'Thinking',
+						'Enabled': bool( st.session_state.get( 'thinking_mode_enabled', False ) ),
+						'Supported': bool( capabilities.get( 'thinking', False ) ) },
+						{ 'Capability': 'Advanced Coding',
+								'Enabled': bool( st.session_state.get( 'coding_mode_enabled',
+									False ) ),
+								'Supported': bool( capabilities.get( 'coding', False ) ) },
+						{ 'Capability': 'Function Calling',
+								'Enabled': bool( st.session_state.get( 'function_call_enabled',
+									False ) ),
+								'Supported': bool( capabilities.get( 'function_calling', False )
+								) },
+						{ 'Capability': 'Web Browsing', 'Enabled': False,
+								'Supported': bool( capabilities.get( 'web_browsing', False ) ) } ]
 				
 				df_capabilities = pd.DataFrame( status_rows )
 				st.dataframe( df_capabilities, use_container_width=True, hide_index=True )
