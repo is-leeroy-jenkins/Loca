@@ -37,15 +37,40 @@ base model metadata, description, and allowed application modes are declared.
 
 ![](https://github.com/is-leeroy-jenkins/Loca/blob/main/resources/images/loca-demo.gif)
 
-## 🕸️ Streamlit Web
-
-[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit\&logoColor=white)](https://localoca.streamlit.app/)
-
 ![](https://github.com/is-leeroy-jenkins/LocaLlama/blob/main/resources/images/Loca-streamlit.gif)
 
-LocaLlama uses Streamlit to provide an interactive local-AI console with sidebar model selection,
-mode selection, parameter controls, upload workflows, persisted chat, database tools, and status
-visibility.
+___
+
+## ☁️ Cloud
+
+<table>
+<tr>
+
+<!-- STREAMLIT -->
+<td align="center">
+<img width="200" height="1" alt=""><br>
+<a href="https://localoca.streamlit.app/">
+<img src="https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit App">
+</a>
+</td>
+
+<!-- DATABRICKS -->
+<td align="center">
+<img width="200" height="1" alt=""><br>
+<a href="https://dbc-a0c21f80-7bb3.cloud.databricks.com/browse/folders/3301507604155625?o=7474645703081351">
+<img src="https://img.shields.io/badge/Databricks%20Repo-Cutey--Py-FF3621?logo=databricks&logoColor=white" alt="Databricks Notebook">
+</a>
+</td>
+
+<!-- PALANTIR -->
+<td align="center">
+<img width="200" height="1" alt=""><br>
+<a href="<LINK>">
+<img src="https://img.shields.io/badge/Palantir%20Foundry-Repository-101113?logo=palantir&logoColor=white" alt="Palantir Repo">
+</a>
+</td>
+</tr>
+</table>
 
 ## ✨ Key Features
 
