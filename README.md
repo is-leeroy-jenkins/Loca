@@ -50,7 +50,7 @@ ___
 <td align="center">
 <img width="250" height="1" alt=""><br>
 <a href="https://localoca.streamlit.app/">
-<img src="https://img.shields.io/badge/Streamlit-Web%20App%20LocaLLaMa-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit App">
+<img src="https://img.shields.io/badge/Streamlit-Web%20App-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit App">
 </a>
 </td>
 
