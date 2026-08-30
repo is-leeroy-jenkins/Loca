@@ -48,7 +48,7 @@ ___
 
 <!-- STREAMLIT -->
 <td align="center">
-<img width="200" height="1" alt=""><br>
+<img width="220" height="1" alt=""><br>
 <a href="https://localoca.streamlit.app/">
 <img src="https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit App">
 </a>
@@ -56,7 +56,7 @@ ___
 
 <!-- DATABRICKS -->
 <td align="center">
-<img width="200" height="1" alt=""><br>
+<img width="220" height="1" alt=""><br>
 <a href="https://dbc-a0c21f80-7bb3.cloud.databricks.com/browse/folders/3301507604155625?o=7474645703081351">
 <img src="https://img.shields.io/badge/Databricks%20Repo-Cutey--Py-FF3621?logo=databricks&logoColor=white" alt="Databricks Notebook">
 </a>
@@ -64,7 +64,7 @@ ___
 
 <!-- PALANTIR -->
 <td align="center">
-<img width="200" height="1" alt=""><br>
+<img width="220" height="1" alt=""><br>
 <a href="https://leeroy.usw-16.palantirfoundry.com/shares/links/2bzvx4unkfiga">
 <img src="https://img.shields.io/badge/Palantir%20Foundry-Repository-101113?logo=palantir&logoColor=white" alt="Palantir Repo">
 </a>
