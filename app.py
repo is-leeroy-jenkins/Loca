@@ -7109,7 +7109,7 @@ if mode == 'Text Generation':
 					st.rerun( )
 			
 			# ------------------------------------------------------------------
-			# Gipity Tools and Web Browsing
+			# Tools and Web Browsing
 			# ------------------------------------------------------------------
 			with st.expander( label='Tools & Web', icon='🧰', expanded=False ):
 				tools_supported = bool( model_supports_capability( 'function_calling' ) )
@@ -7138,51 +7138,29 @@ if mode == 'Text Generation':
 				tool_c1, tool_c2 = st.columns( [ 0.45, 0.55 ], border=True, gap='medium' )
 				
 				with tool_c1:
-					st.text_area(
-						label='Tool Task',
-						height=150,
-						key='function_call_prompt',
+					st.text_area( label='Tool Task', height=150, key='function_call_prompt',
 						placeholder=(
-								'Example: Fetch https://example.com and summarize the page '
-								'in five bullets.'),
-						disabled=not tools_supported
-					)
+						'Example: Fetch https://example.com and summarize the page '
+						'in five bullets.'), disabled=not tools_supported )
 					
-					generate_tool = st.button(
-						label='Generate Function Call',
-						key='generate_function_call_button',
-						width='stretch',
-						disabled=not tools_supported
-					)
+					generate_tool = st.button( label='Generate Function Call',
+						key='generate_function_call_button', width='stretch', disabled=not
+						tools_supported )
 					
-					execute_tool = st.button(
-						label='Execute Function Call',
-						key='execute_function_call_button',
-						width='stretch',
-						disabled=not tools_supported
-					)
+					execute_tool = st.button( label='Execute Function Call',
+						key='execute_function_call_button', width='stretch', disabled=not
+						tools_supported )
 					
-					final_answer_tool = st.button(
-						label='Generate Final Answer from Tool Result',
-						key='tool_final_answer_button',
-						width='stretch',
-						disabled=not tools_supported
-					)
+					final_answer_tool = st.button( label='Generate Final Answer from Tool Result',
+						key='tool_final_answer_button', width='stretch', disabled=not
+						tools_supported )
 				
 				with tool_c2:
-					st.text_area(
-						label='Generated Function Call JSON',
-						height=180,
-						key='function_call_model_json',
-						disabled=not tools_supported
-					)
+					st.text_area( label='Generated Function Call JSON', height=180,
+						key='function_call_model_json', disabled=not tools_supported )
 					
-					st.text_area(
-						label='Tool Execution Result',
-						height=180,
-						key='function_call_result',
-						disabled=True
-					)
+					st.text_area( label='Tool Execution Result', height=180,
+						key='function_call_result', disabled=True )
 				
 				if generate_tool:
 					try:
@@ -7261,59 +7239,35 @@ if mode == 'Text Generation':
 				web_c1, web_c2 = st.columns( [ 0.45, 0.55 ], border=True, gap='medium' )
 				
 				with web_c1:
-					st.text_input(
-						label='Web URL',
-						key='web_browse_url',
-						placeholder='https://example.com/article',
-						disabled=not web_supported
-					)
+					st.text_input( label='Web URL', key='web_browse_url',
+						placeholder='https://example.com/article', disabled=not web_supported )
 					
-					st.text_input(
-						label='Allowed Domain Optional',
-						key='web_browse_allow_domain',
-						placeholder='example.com',
-						disabled=not web_supported
-					)
+					st.text_input( label='Allowed Domain Optional', key='web_browse_allow_domain',
+						placeholder='example.com', disabled=not web_supported )
 					
-					st.text_area(
-						label='Web Browse Prompt',
-						height=120,
-						key='web_browse_prompt',
+					st.text_area( label='Web Browse Prompt', height=120, key='web_browse_prompt',
 						placeholder='Summarize the page and identify the most important facts.',
-						disabled=not web_supported
-					)
+						disabled=not web_supported )
 					
-					browse_web = st.button(
-						label='Fetch Web Context',
-						key='web_browse_fetch_button',
-						width='stretch',
-						disabled=not web_supported
-					)
+					browse_web = st.button( label='Fetch Web Context',
+						key='web_browse_fetch_button', width='stretch', disabled=not
+						web_supported )
 					
-					send_web = st.button(
-						label='Send Web Context to Text Generation',
-						key='web_browse_send_context_button',
-						width='stretch',
-						disabled=not web_supported
-					)
+					send_web = st.button( label='Send Web Context to Text Generation',
+						key='web_browse_send_context_button', width='stretch', disabled=not
+						web_supported )
 				
 				with web_c2:
-					st.text_area(
-						label='Fetched Web Context',
-						height=340,
-						key='web_browse_result',
-						disabled=True
-					)
+					st.text_area( label='Fetched Web Context', height=340,
+						key='web_browse_result', disabled=True )
 				
 				if browse_web:
 					try:
-						context_text = web_browse_url_tool(
-							url=str( st.session_state.get( 'web_browse_url', '' ) or '' ),
-							prompt=str( st.session_state.get( 'web_browse_prompt', '' ) or '' ),
-							allowed_domain=str(
-								st.session_state.get( 'web_browse_allow_domain', '' ) or '' ),
-							max_chars=12000
-						)
+						context_text = web_browse_url_tool( url=str( st.session_state.get(
+							'web_browse_url', '' ) or '' ), prompt=str( st.session_state.get(
+							'web_browse_prompt', '' ) or '' ), allowed_domain=str(
+							st.session_state.get( 'web_browse_allow_domain', '' ) or '' ),
+							max_chars=12000 )
 						
 						st.session_state[ 'web_browse_result' ] = context_text
 						st.session_state[ 'web_browse_context_buffer' ] = context_text
@@ -7362,8 +7316,7 @@ if mode == 'Text Generation':
 				
 				with mind_c1:
 					st.slider( label='Temperature', min_value=0.0,
-						max_value=1.0, help=cfg.TEMPERATURE,
-						key='temperature' )
+						max_value=1.0, help=cfg.TEMPERATURE, key='temperature' )
 					temperature = st.session_state[ 'temperature' ]
 				
 				with mind_c2:
@@ -7372,8 +7325,8 @@ if mode == 'Text Generation':
 					top_percent = st.session_state[ 'top_percent' ]
 				
 				with mind_c3:
-					st.slider( label='Top-K', min_value=0, max_value=50,
-						step=1, key='top_k', help=cfg.TOP_K )
+					st.slider( label='Top-K', min_value=0, max_value=50, step=1,
+						key='top_k', help=cfg.TOP_K )
 					top_k = st.session_state[ 'top_k' ]
 				
 				with mind_c4:
@@ -7394,14 +7347,12 @@ if mode == 'Text Generation':
 				
 				with prob_c1:
 					st.slider( label='Repeat Window', min_value=0, max_value=1024,
-						step=16, key='repeat_window',
-						help=cfg.REPEAT_WINDOW )
+						step=16, key='repeat_window', help=cfg.REPEAT_WINDOW )
 					repeat_window = st.session_state[ 'repeat_window' ]
 				
 				with prob_c2:
 					st.slider( label='Repeat Penalty', min_value=0.0, max_value=2.0,
-						key='repeat_penalty', step=0.05,
-						help=cfg.REPEAT_PENALTY )
+						key='repeat_penalty', step=0.05, help=cfg.REPEAT_PENALTY )
 					repeat_penalty = st.session_state[ 'repeat_penalty' ]
 				
 				with prob_c3:
@@ -7427,8 +7378,7 @@ if mode == 'Text Generation':
 				
 				with ctx_c1:
 					st.slider( label='Context Window', min_value=0, max_value=8192,
-						key='context_window', step=512,
-						help=cfg.CONTEXT_WINDOW )
+						key='context_window', step=512, help=cfg.CONTEXT_WINDOW )
 					context_window = st.session_state[ 'context_window' ]
 				
 				with ctx_c2:
@@ -7466,7 +7416,6 @@ if mode == 'Text Generation':
 		for msg in st.session_state.messages:
 			role = ''
 			content = ''
-			
 			if isinstance( msg, dict ):
 				role = str( msg.get( 'role', '' ) or '' ).strip( )
 				content = msg.get( 'content', '' )
@@ -7494,13 +7443,11 @@ if mode == 'Text Generation':
 		if user_input and isinstance( user_input, str ) and user_input.strip( ):
 			user_input = user_input.strip( )
 			st.session_state[ 'last_preview_input' ] = str( user_input )
-			
 			if 'messages' not in st.session_state or not isinstance( st.session_state.messages, list ):
 				st.session_state.messages = [ ]
 			
 			save_message( 'user', user_input )
 			st.session_state.messages.append( ('user', user_input) )
-			
 			with st.chat_message( 'user' ):
 				st.markdown( user_input )
 			
@@ -7555,16 +7502,6 @@ elif mode == 'Document Q&A':
 		# Expander — Mind Controls
 		# ------------------------------------------------------------------
 		with st.expander( label='Mind Controls', icon='🧠', expanded=False ):
-			# ------------------------------------------------------------------
-			# Document Q&A reset request processing.
-			#
-			# Important:
-			# ---------
-			# Streamlit widget-owned keys must be reset before their widgets are
-			# instantiated in this script pass. Buttons below only set the pending
-			# request key. The actual reset is processed here at the top of this
-			# expander before any controls are created.
-			# ------------------------------------------------------------------
 			docqna_reset_defaults: Dict[ str, Dict[ str, Any ] ] = {
 					'doc_retrieval_controls_reset':
 						{
@@ -7636,87 +7573,48 @@ elif mode == 'Document Q&A':
 			# Retrieval Controls
 			# ------------------------------------------------------------------
 			with st.expander( label='Retrieval Controls', icon='🧲', expanded=False ):
-				ret_c1, ret_c2, ret_c3, ret_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ],
-					border=True,
-					gap='medium'
-				)
+				ret_c1, ret_c2, ret_c3, ret_c4 = st.columns( [ 0.25, 0.25, 0.25,
+						0.25 ], border=True, gap='medium' )
 				
 				with ret_c1:
-					st.slider(
-						label='Chunks to Retrieve',
-						min_value=1,
-						max_value=20,
-						step=1,
-						key='retrieval_k'
-					)
+					st.slider( label='Chunks to Retrieve', min_value=1, max_value=20, step=1,
+						key='retrieval_k' )
 				
 				with ret_c2:
-					st.slider(
-						label='Chunk Size',
-						min_value=256,
-						max_value=4000,
-						step=64,
-						key='retrieval_chunk_size'
-					)
+					st.slider( label='Chunk Size', min_value=256, max_value=4000, step=64,
+						key='retrieval_chunk_size' )
 				
 				with ret_c3:
-					st.slider(
-						label='Chunk Overlap',
-						min_value=0,
-						max_value=1000,
-						step=25,
-						key='retrieval_chunk_overlap'
-					)
+					st.slider( label='Chunk Overlap', min_value=0, max_value=1000, step=25,
+						key='retrieval_chunk_overlap' )
 				
 				with ret_c4:
-					st.toggle(
-						label='Show Retrieved Chunks',
-						value=bool( st.session_state.get( 'show_retrieved_chunks', True ) ),
-						key='show_retrieved_chunks'
-					)
+					st.toggle( label='Show Retrieved Chunks', value=bool( st.session_state.get(
+						'show_retrieved_chunks', True ) ), key='show_retrieved_chunks' )
 				
-				ret_c5, ret_c6, ret_c7, ret_c8 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ],
-					border=True,
-					gap='medium'
-				)
+				ret_c5, ret_c6, ret_c7, ret_c8 = st.columns( [ 0.25, 0.25, 0.25,
+						0.25 ], border=True, gap='medium' )
 				
 				with ret_c5:
-					st.toggle(
-						label='Require Grounding',
-						value=bool( st.session_state.get( 'require_grounding', True ) ),
-						key='require_grounding'
-					)
+					st.toggle( label='Require Grounding', value=bool( st.session_state.get(
+						'require_grounding', True ) ), key='require_grounding' )
 				
 				with ret_c6:
-					st.toggle(
-						label='Answer From Excerpts Only',
-						value=bool( st.session_state.get( 'answer_from_excerpts_only', True ) ),
-						key='answer_from_excerpts_only'
-					)
+					st.toggle( label='Answer From Excerpts Only', value=bool(
+						st.session_state.get( 'answer_from_excerpts_only', True ) ),
+						key='answer_from_excerpts_only' )
 				
 				with ret_c7:
-					st.toggle(
-						label='Use sqlite-vec',
-						value=bool( st.session_state.get( 'prefer_sqlite_vec', True ) ),
-						key='prefer_sqlite_vec'
-					)
+					st.toggle( label='Use sqlite-vec', value=bool( st.session_state.get(
+						'prefer_sqlite_vec', True ) ), key='prefer_sqlite_vec' )
 				
 				with ret_c8:
-					st.toggle(
-						label='Fallback Cosine Search',
-						value=bool( st.session_state.get( 'allow_similarity_fallback', True ) ),
-						key='allow_similarity_fallback'
-					)
+					st.toggle( label='Fallback Cosine Search', value=bool( st.session_state.get(
+						'allow_similarity_fallback', True ) ), key='allow_similarity_fallback' )
 				
-				st.button(
-					label='Reset',
-					key='doc_retrieval_controls_reset',
-					width='stretch',
-					on_click=request_docqna_reset,
-					args=('doc_retrieval_controls_reset',)
-				)
+				st.button( label='Reset', key='doc_retrieval_controls_reset', width='stretch',
+					on_click=request_docqna_reset, args=(
+						'doc_retrieval_controls_reset',) )
 			
 			# ------------------------------------------------------------------
 			# Document Actions
@@ -7725,19 +7623,10 @@ elif mode == 'Document Q&A':
 				action_c1, action_c2 = st.columns( [ 0.6, 0.4 ], border=True )
 				
 				with action_c1:
-					st.selectbox(
-						label='Action',
-						options=[
-								'Answer Question',
-								'Summarize Active Document',
-								'Extract Key Points',
-								'Generate Outline',
-								'Extract Entities',
-								'Extract Tables',
-								'Compare Active Documents'
-						],
-						key='docqna_action'
-					)
+					st.selectbox( label='Action', options=[ 'Answer Question',
+							'Summarize Active Document', 'Extract Key Points', 'Generate Outline',
+							'Extract Entities', 'Extract Tables',
+							'Compare Active Documents' ], key='docqna_action' )
 				
 				with action_c2:
 					st.markdown( '<br>', unsafe_allow_html=True )
@@ -7764,29 +7653,19 @@ elif mode == 'Document Q&A':
 						}
 						
 						if action_name != 'Answer Question':
-							action_prompt = action_prompts.get(
-								action_name,
-								'Summarize the active document set.'
-							)
+							action_prompt = action_prompts.get( action_name,
+								'Summarize the active document set.' )
 							
 							with st.chat_message( 'assistant' ):
 								out = st.empty( )
-								response = run_llm_turn(
-									user_input=build_docqna_input(
-										user_query=action_prompt,
-										k=int( st.session_state.get( 'retrieval_k', 6 ) )
-									),
-									temperature=float( st.session_state.get( 'temperature', 0.0 ) ),
-									top_p=float( st.session_state.get( 'top_percent', 0.95 ) ),
-									repeat_penalty=float(
-										st.session_state.get( 'repeat_penalty', 1.1 )
-									),
-									max_tokens=int(
-										st.session_state.get( 'max_tokens', 1024 )
-									) or 1024,
-									stream=True,
-									output=out
-								)
+								response = run_llm_turn( user_input=build_docqna_input(
+									user_query=action_prompt, k=int( st.session_state.get(
+										'retrieval_k', 6 ) ) ), temperature=float(
+									st.session_state.get( 'temperature', 0.0 ) ), top_p=float(
+									st.session_state.get( 'top_percent', 0.95 ) ),
+									repeat_penalty=float( st.session_state.get( 'repeat_penalty',
+										1.1 ) ), max_tokens=int( st.session_state.get(
+										'max_tokens', 1024 ) ) or 1024, stream=True, output=out )
 							
 							save_message( 'assistant', response )
 							st.session_state.messages.append( ('assistant', response) )
@@ -7795,246 +7674,130 @@ elif mode == 'Document Q&A':
 			# Document Parsing
 			# ------------------------------------------------------------------
 			with st.expander( label='Document Parsing', icon='📄', expanded=False ):
-				parse_c1, parse_c2, parse_c3, parse_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ],
-					border=True,
-					gap='medium'
-				)
+				parse_c1, parse_c2, parse_c3, parse_c4 = st.columns( [ 0.25, 0.25, 0.25,
+						0.25 ], border=True, gap='medium' )
 				
 				with parse_c1:
-					st.toggle(
-						label='Enable OCR',
-						value=bool( st.session_state.get( 'ocr_enabled', False ) ),
-						key='ocr_enabled'
-					)
+					st.toggle( label='Enable OCR', value=bool( st.session_state.get(
+						'ocr_enabled', False ) ), key='ocr_enabled' )
 				
 				with parse_c2:
-					st.toggle(
-						label='Prefer Native PDF Text',
-						value=bool( st.session_state.get( 'prefer_native_pdf_text', True ) ),
-						key='prefer_native_pdf_text'
-					)
+					st.toggle( label='Prefer Native PDF Text', value=bool( st.session_state.get(
+						'prefer_native_pdf_text', True ) ), key='prefer_native_pdf_text' )
 				
 				with parse_c3:
-					st.toggle(
-						label='Include Page Markers',
-						value=bool( st.session_state.get( 'include_page_markers', False ) ),
-						key='include_page_markers'
-					)
+					st.toggle( label='Include Page Markers', value=bool( st.session_state.get(
+						'include_page_markers', False ) ), key='include_page_markers' )
 				
 				with parse_c4:
-					st.toggle(
-						label='Show Diagnostics',
-						value=bool( st.session_state.get( 'show_docqna_diagnostics', False ) ),
-						key='show_docqna_diagnostics'
-					)
+					st.toggle( label='Show Diagnostics', value=bool( st.session_state.get(
+						'show_docqna_diagnostics', False ) ), key='show_docqna_diagnostics' )
 				
-				st.button(
-					label='Reset',
-					key='doc_parsing_controls_reset',
-					width='stretch',
-					on_click=request_docqna_reset,
-					args=('doc_parsing_controls_reset',)
-				)
+				st.button( label='Reset', key='doc_parsing_controls_reset', width='stretch',
+					on_click=request_docqna_reset, args=(
+						'doc_parsing_controls_reset',) )
 			
 			# ------------------------------------------------------------------
 			# Response Settings
 			# ------------------------------------------------------------------
 			with st.expander( label='Response Settings', icon='↔️', expanded=False ):
-				mind_c1, mind_c2, mind_c3 = st.columns(
-					[ 0.33, 0.33, 0.33 ],
-					border=True,
-					gap='medium'
-				)
+				mind_c1, mind_c2, mind_c3 = st.columns( [ 0.33, 0.33,
+						0.33 ], border=True, gap='medium' )
 				
 				with mind_c1:
-					st.slider(
-						label='Temperature',
-						min_value=0.0,
-						max_value=1.0,
-						value=float( st.session_state.get( 'temperature', 0.0 ) ),
-						help=cfg.TEMPERATURE,
-						key='temperature'
-					)
+					st.slider( label='Temperature', min_value=0.0, max_value=1.0, value=float(
+						st.session_state.get( 'temperature', 0.0 ) ), help=cfg.TEMPERATURE,
+						key='temperature' )
 					temperature = st.session_state[ 'temperature' ]
 				
 				with mind_c2:
-					st.slider(
-						label='Top-P',
-						min_value=0.0,
-						max_value=1.0,
-						step=0.01,
-						key='top_percent',
-						help=cfg.TOP_P
-					)
+					st.slider( label='Top-P', min_value=0.0, max_value=1.0, step=0.01,
+						key='top_percent', help=cfg.TOP_P )
 					top_percent = st.session_state[ 'top_percent' ]
 				
 				with mind_c3:
-					st.slider(
-						label='Top-K',
-						min_value=0,
-						max_value=50,
-						step=1,
-						key='top_k',
-						help=cfg.TOP_K
-					)
+					st.slider( label='Top-K', min_value=0, max_value=50, step=1, key='top_k',
+						help=cfg.TOP_K )
 					top_k = st.session_state[ 'top_k' ]
 				
-				st.button(
-					label='Reset',
-					key='doc_response_controls_reset',
-					width='stretch',
-					on_click=request_docqna_reset,
-					args=('doc_response_controls_reset',)
-				)
+				st.button( label='Reset', key='doc_response_controls_reset', width='stretch',
+					on_click=request_docqna_reset, args=(
+						'doc_response_controls_reset',) )
 			
 			# ------------------------------------------------------------------
 			# Inference Settings
 			# ------------------------------------------------------------------
 			with st.expander( label='Inference Settings', icon='🎚️', expanded=False ):
-				prob_c1, prob_c2, prob_c3, prob_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ],
-					border=True,
-					gap='medium'
-				)
+				prob_c1, prob_c2, prob_c3, prob_c4 = st.columns( [ 0.25, 0.25, 0.25,
+						0.25 ], border=True, gap='medium' )
 				
 				with prob_c1:
-					st.slider(
-						label='Repeat Window',
-						min_value=0,
-						max_value=1024,
-						step=16,
-						key='repeat_window',
-						help=cfg.REPEAT_WINDOW
-					)
+					st.slider( label='Repeat Window', min_value=0, max_value=1024, step=16,
+						key='repeat_window', help=cfg.REPEAT_WINDOW )
 					repeat_window = st.session_state[ 'repeat_window' ]
 				
 				with prob_c2:
-					st.slider(
-						label='Repeat Penalty',
-						min_value=0.0,
-						max_value=2.0,
-						key='repeat_penalty',
-						step=0.05,
-						help=cfg.REPEAT_PENALTY
-					)
+					st.slider( label='Repeat Penalty', min_value=0.0, max_value=2.0,
+						key='repeat_penalty', step=0.05, help=cfg.REPEAT_PENALTY )
 					repeat_penalty = st.session_state[ 'repeat_penalty' ]
 				
 				with prob_c3:
-					st.slider(
-						label='Presence Penalty',
-						min_value=0.0,
-						max_value=2.0,
-						key='presense_penalty',
-						step=0.05,
-						help=cfg.PRESENCE_PENALTY
-					)
+					st.slider( label='Presence Penalty', min_value=0.0, max_value=2.0,
+						key='presense_penalty', step=0.05, help=cfg.PRESENCE_PENALTY )
 					presense_penalty = st.session_state[ 'presense_penalty' ]
 				
 				with prob_c4:
-					st.slider(
-						label='Frequency Penalty',
-						min_value=0.0,
-						max_value=2.0,
-						key='frequency_penalty',
-						step=0.05,
-						help=cfg.FREQUENCY_PENALTY
-					)
+					st.slider( label='Frequency Penalty', min_value=0.0, max_value=2.0,
+						key='frequency_penalty', step=0.05, help=cfg.FREQUENCY_PENALTY )
 					frequency_penalty = st.session_state[ 'frequency_penalty' ]
 				
-				st.button(
-					label='Reset',
-					key='doc_probability_controls_reset',
-					width='stretch',
-					on_click=request_docqna_reset,
-					args=('doc_probability_controls_reset',)
-				)
+				st.button( label='Reset', key='doc_probability_controls_reset', width='stretch',
+					on_click=request_docqna_reset, args=(
+						'doc_probability_controls_reset',) )
 			
 			# ------------------------------------------------------------------
 			# Context Controls
 			# ------------------------------------------------------------------
 			with st.expander( label='Context Controls', icon='🎛️', expanded=False ):
-				ctx_c1, ctx_c2, ctx_c3, ctx_c4 = st.columns(
-					[ 0.25, 0.25, 0.25, 0.25 ],
-					border=True,
-					gap='medium'
-				)
+				ctx_c1, ctx_c2, ctx_c3, ctx_c4 = st.columns( [ 0.25, 0.25, 0.25,
+						0.25 ], border=True, gap='medium' )
 				
 				with ctx_c1:
-					st.slider(
-						label='Context Window',
-						min_value=0,
-						max_value=8192,
-						key='context_window',
-						step=512,
-						help=cfg.CONTEXT_WINDOW
-					)
+					st.slider( label='Context Window', min_value=0, max_value=8192,
+						key='context_window', step=512, help=cfg.CONTEXT_WINDOW )
 					context_window = st.session_state[ 'context_window' ]
 				
 				with ctx_c2:
-					st.slider(
-						label='CPU Threads',
-						min_value=0,
-						max_value=cfg.CORES,
-						key='cpu_threads',
-						step=1,
-						help=cfg.CPU_CORES
-					)
+					st.slider( label='CPU Threads', min_value=0, max_value=cfg.CORES,
+						key='cpu_threads', step=1, help=cfg.CPU_CORES )
 					cpu_threads = st.session_state[ 'cpu_threads' ]
 				
 				with ctx_c3:
-					st.slider(
-						label='Max Tokens',
-						min_value=0,
-						max_value=4096,
-						step=128,
-						key='max_tokens',
-						help=cfg.MAX_TOKENS
-					)
+					st.slider( label='Max Tokens', min_value=0, max_value=4096, step=128,
+						key='max_tokens', help=cfg.MAX_TOKENS )
 					max_tokens = st.session_state[ 'max_tokens' ]
 				
 				with ctx_c4:
-					st.slider(
-						label='Random Seed',
-						min_value=0,
-						max_value=4096,
-						step=1,
-						key='random_seed',
-						help=cfg.SEED
-					)
+					st.slider( label='Random Seed', min_value=0, max_value=4096, step=1,
+						key='random_seed', help=cfg.SEED )
 				
-				st.button(
-					label='Reset',
-					key='doc_context_controls_reset',
-					width='stretch',
-					on_click=request_docqna_reset,
-					args=('doc_context_controls_reset',)
-				)
+				st.button( label='Reset', key='doc_context_controls_reset', width='stretch',
+					on_click=request_docqna_reset, args=(
+						'doc_context_controls_reset',) )
 	
 		# ------------------------------------------------------------------
 		# Expander — System Instructions
 		# ------------------------------------------------------------------
-		with st.expander( label='System Instructions', icon='🖥️', expanded=False, width='stretch' ):
-			render_system_instructions(
-				prefix='docqna',
-				include_apply_preset=False,
-				include_preview=False
-			)
+		with st.expander( label='System Instructions', icon='🖥️', expanded=False,
+				width='stretch' ):
+			render_system_instructions( prefix='docqna', include_apply_preset=False,
+				include_preview=False )
 		
 		# ------------------------------------------------------------------
 		# Document Selection UI
 		# ------------------------------------------------------------------
 		with st.expander( label='Document Loader', icon='📥', expanded=False, width='stretch' ):
-			# ------------------------------------------------------------------
-			# Document loader pending-action processing.
-			#
-			# Important:
-			# ---------
-			# active_docs is owned by the multiselect widget below. Any reset/unload
-			# of active_docs must happen before that widget is instantiated.
-			# ------------------------------------------------------------------
 			pending_doc_loader_action = st.session_state.pop( 'pending_doc_loader_action', None )
-			
 			if pending_doc_loader_action == 'unload':
 				st.session_state[ 'uploaded' ] = [ ]
 				st.session_state[ 'active_docs' ] = [ ]
@@ -8221,7 +7984,6 @@ elif mode == 'Document Q&A':
 		for msg in st.session_state.messages:
 			role = ''
 			content = ''
-			
 			if isinstance( msg, dict ):
 				role = str( msg.get( 'role', '' ) or '' ).strip( )
 				content = msg.get( 'content', '' )
