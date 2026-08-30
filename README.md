@@ -50,7 +50,7 @@ ___
 <td align="center">
 <img width="250" height="1" alt=""><br>
 <a href="https://localoca.streamlit.app/">
-<img src="https://img.shields.io/badge/Streamlit-Web%20App-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit App">
+<img src="https://img.shields.io/badge/Streamlit-Loca%20LLaMa-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit App">
 </a>
 </td>
 
@@ -58,7 +58,7 @@ ___
 <td align="center">
 <img width="250" height="1" alt=""><br>
 <a href="https://dbc-a0c21f80-7bb3.cloud.databricks.com/browse/folders/3301507604155625?o=7474645703081351">
-<img src="https://img.shields.io/badge/Databricks%20Repo-Loca%20LLaMa-FF3621?logo=databricks&logoColor=white" alt="Databricks Notebook">
+<img src="https://img.shields.io/badge/Databricks-Loca%20LLaMa-FF3621?logo=databricks&logoColor=white" alt="Databricks Notebook">
 </a>
 </td>
 
@@ -66,7 +66,7 @@ ___
 <td align="center">
 <img width="250" height="1" alt=""><br>
 <a href="https://leeroy.usw-16.palantirfoundry.com/shares/links/2bzvx4unkfiga">
-<img src="https://img.shields.io/badge/Palantir%20Foundry-Repo-101113?logo=palantir&logoColor=white" alt="Palantir Repo">
+<img src="https://img.shields.io/badge/Palantir-Loca%20LLaMa-101113?logo=palantir&logoColor=white" alt="Palantir Repo">
 </a>
 </td>
 </tr>
