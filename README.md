@@ -20,7 +20,7 @@
 
 ___
 
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-0078FC?style=for-the-badge&logo=github)](https://is-leeroy-jenkins.github.io/Loca/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-0078FC?style=for-the-badge&logo=github)](https://is-leeroy-jenkins.github.io/loca/)
 
 Loca is a python application for running local GGUF-based LLMs for text generation,
 document-grounded retrieval, semantic search, prompt engineering, multimodal workflow staging,
